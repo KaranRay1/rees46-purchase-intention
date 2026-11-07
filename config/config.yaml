@@ -47,6 +47,9 @@ data:
   synthetic:
     n_sessions: 1000
     purchase_rate: 0.06         # roughly the REES46 session conversion rate
+    start_date: "2019-10-01"
+    n_days: 31
+    inject_noise: false         # true adds duplicates / bad prices / null sessions (cleaning tests)
 
   schema:
     event_time: datetime        # UTC, e.g. "2019-10-01 00:00:00 UTC"
