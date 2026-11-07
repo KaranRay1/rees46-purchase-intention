@@ -1,2 +1,283 @@
-# Experiment configuration (paths, K values, splits, seeds, hyperparameters, feature groups)
-# TODO: filled in the file-by-file build.
+# =============================================================================
+# Experiment configuration — REES46 purchase-intention research (coursework)
+# Single source of truth for every script. Each run saves a copy of this file
+# to results/runs/<run_id>/config_snapshot.yaml for reproducibility.
+# No MLOps settings here by design (see docs/archive/blueprint_with_mlops.md).
+# =============================================================================
+
+project:
+  name: rees46_purchase_intention
+  seeds: [42, 7, 2026]          # every model × K configuration is run once per seed
+  n_jobs: -1                    # CPU cores for sklearn / LightGBM (-1 = all)
+  device: cpu                   # "cpu" keeps latency comparisons fair (RQ4)
+
+# -----------------------------------------------------------------------------
+# Paths (relative to the project root)
+# -----------------------------------------------------------------------------
+paths:
+  raw_dir: data/raw
+  interim_dir: data/interim                  # cleaned events as Parquet
+  processed_dir: data/processed              # per-K features: data/processed/k{K}/
+  results_dir: results
+  runs_dir: results/runs
+  tables_dir: results/tables
+  figures_dir: results/figures
+  all_runs_csv: results/tables/all_runs.csv  # one row per run (replaces MLflow UI)
+
+# -----------------------------------------------------------------------------
+# Data
+# -----------------------------------------------------------------------------
+data:
+  # mode: "synthetic" for tests / quick runs, "dev" for one month, "full" for final runs
+  mode: dev
+  dev_files: [2019-Oct.csv]
+  full_files:
+    - 2019-Oct.csv
+    - 2019-Nov.csv
+    - 2019-Dec.csv
+    - 2020-Jan.csv
+    - 2020-Feb.csv
+    - 2020-Mar.csv
+    - 2020-Apr.csv
+
+  # Optional down-sampling of whole sessions (never of single events) to fit memory.
+  # null = use all sessions. Applied before sessionising, with project.seeds[0].
+  session_sample_fraction: null
+
+  synthetic:
+    n_sessions: 1000
+    purchase_rate: 0.06         # roughly the REES46 session conversion rate
+
+  schema:
+    event_time: datetime        # UTC, e.g. "2019-10-01 00:00:00 UTC"
+    event_type: categorical
+    product_id: int64
+    category_id: int64
+    category_code: string       # dotted path, e.g. "electronics.smartphone"; often null
+    brand: string               # often null
+    price: float64
+    user_id: int64
+    user_session: string
+
+  event_types: [view, cart, remove_from_cart, purchase]
+
+  cleaning:
+    drop_duplicate_events: true # identical rows logged twice
+    drop_null_session: true
+    min_price: 0.0              # drop rows with price <= min_price
+    max_session_duration_hours: 24   # sessions longer than this are treated as logging artefacts
+    missing_category_token: unknown
+    missing_brand_token: unknown
+
+# -----------------------------------------------------------------------------
+# Sessionising and target (leakage rules — see docs/research_blueprint.md §4)
+# -----------------------------------------------------------------------------
+sessionize:
+  prefix_k: [3, 5, 10]          # RQ2: experiment grid
+  default_k: 5                  # used by single-K scripts (ablation, SHAP)
+  require_more_than_k_events: true      # session must have > K events
+  drop_purchase_within_prefix: true     # sessions with a purchase in events 1..K are removed
+  target_column: target_purchase        # 1 = purchase after event K, else 0
+
+# -----------------------------------------------------------------------------
+# Temporal split (by session start time, no shuffling)
+# -----------------------------------------------------------------------------
+split:
+  method: chronological
+  order_by: session_start
+  train: 0.70
+  val: 0.15
+  test: 0.15
+  robustness:
+    per_month_test: true        # extra test sets, one per calendar month (full mode)
+
+# -----------------------------------------------------------------------------
+# Aggregated features for tabular models (RQ3 ablation ladder, cumulative)
+# Note: with a fixed prefix K, view + cart + remove = K, so the counts are
+# collinear. Trees are unaffected; LR uses regularisation.
+# Purchase-based ratios are excluded: always 0 under the leakage rule.
+# -----------------------------------------------------------------------------
+features:
+  epsilon: 1.0e-6
+  top_n_categories: 20          # other categories -> "other"; one-hot for LR / MLP
+
+  groups:
+    G1_activity:
+      - view_count
+      - unique_products_count
+      - session_duration_sec
+      - mean_gap_sec
+    G2_cart_signals:
+      - cart_count
+      - remove_count
+      - has_cart
+      - first_cart_position     # 1..K, or K+1 if no cart in the prefix
+      - last_event_type
+    G3_behavioural_ratios:
+      - cart_to_view_ratio      # cart_count   / (view_count + eps)
+      - remove_to_cart_ratio    # remove_count / (cart_count + eps)
+    G4_category_hierarchy:
+      - unique_categories_count
+      - unique_brands_count
+      - main_category           # top level of category_code of the most-viewed item
+    G5_price_time:
+      - price_mean
+      - price_max
+      - price_sum
+      - price_std
+      - hour_of_day
+      - day_of_week
+
+  categorical: [last_event_type, main_category, hour_of_day, day_of_week]
+
+  ablation_ladder:              # each step = all groups listed
+    - [G1_activity]
+    - [G1_activity, G2_cart_signals]
+    - [G1_activity, G2_cart_signals, G3_behavioural_ratios]
+    - [G1_activity, G2_cart_signals, G3_behavioural_ratios, G4_category_hierarchy]
+    - [G1_activity, G2_cart_signals, G3_behavioural_ratios, G4_category_hierarchy, G5_price_time]
+  ablation_models: [lightgbm, mlp]
+  default_feature_set: all      # main experiments use G1–G5
+
+# -----------------------------------------------------------------------------
+# Per-event sequences for the GRU (same K events as the tabular features)
+# -----------------------------------------------------------------------------
+sequences:
+  categorical:
+    event_type: {embedding_dim: 4}
+    main_category: {embedding_dim: 8}   # top_n_categories + "other" + "unknown"
+  numerical:
+    - log_price                 # log1p(price), standardised on train
+    - log_gap_sec               # log1p(seconds since previous event), standardised on train
+  padding: none                 # every prefix has exactly K events
+
+# -----------------------------------------------------------------------------
+# Class imbalance and decision threshold (same policy for every model)
+# -----------------------------------------------------------------------------
+imbalance:
+  class_weight: balanced
+  threshold:
+    tune_on: val
+    objective: f1               # threshold maximising positive-class F1 on validation
+    default: 0.5
+
+# -----------------------------------------------------------------------------
+# Models (RQ1). Starting values; tuning is on the validation split only.
+# -----------------------------------------------------------------------------
+models:
+  enabled: [rule_based, logistic_regression, random_forest, lightgbm, mlp, tabnet, gru]
+
+  rule_based:
+    rule: cart_count_gt_0
+
+  logistic_regression:
+    C: 1.0
+    penalty: l2
+    solver: lbfgs
+    max_iter: 1000
+
+  random_forest:
+    n_estimators: 300
+    max_depth: 12
+    min_samples_split: 20
+    min_samples_leaf: 10
+    max_features: sqrt
+    tuning_grid:
+      max_depth: [8, 12, 16]
+      min_samples_split: [10, 20, 50]
+
+  lightgbm:
+    n_estimators: 2000          # upper bound; early stopping picks the real number
+    learning_rate: 0.05
+    num_leaves: 31
+    max_depth: -1
+    min_child_samples: 50
+    subsample: 0.8
+    subsample_freq: 1
+    colsample_bytree: 0.8
+    early_stopping_rounds: 50
+    eval_metric: average_precision   # PR-AUC on validation
+    tuning_grid:
+      num_leaves: [15, 31, 63]
+      learning_rate: [0.03, 0.05, 0.1]
+
+  mlp:                          # PyTorch
+    hidden_layers: [128, 64, 32]
+    activation: relu
+    batch_norm: true
+    dropout: 0.3
+    learning_rate: 1.0e-3
+    weight_decay: 1.0e-5
+    batch_size: 1024
+    max_epochs: 50
+    early_stopping_patience: 5
+    monitor: val_pr_auc
+
+  tabnet:                       # pytorch-tabnet
+    n_d: 16
+    n_a: 16
+    n_steps: 4
+    gamma: 1.5
+    lambda_sparse: 1.0e-4
+    learning_rate: 2.0e-2
+    batch_size: 4096
+    virtual_batch_size: 512
+    max_epochs: 50
+    early_stopping_patience: 5
+    monitor: val_pr_auc
+
+  gru:                          # PyTorch, extension model (not in the original proposals)
+    hidden_size: 64
+    num_layers: 1
+    dropout: 0.2
+    bidirectional: false
+    learning_rate: 1.0e-3
+    batch_size: 1024
+    max_epochs: 30
+    early_stopping_patience: 5
+    monitor: val_pr_auc
+
+# -----------------------------------------------------------------------------
+# Evaluation (RQ1–RQ3)
+# -----------------------------------------------------------------------------
+evaluation:
+  primary_metrics: [precision, recall, f1, pr_auc]
+  secondary_metrics: [macro_f1, roc_auc]
+  selection_metric: pr_auc      # used for tuning and ranking
+  bootstrap:
+    n_resamples: 1000
+    confidence: 0.95
+  significance_tests: [paired_bootstrap_pr_auc, mcnemar]
+  alpha: 0.05
+  cohorts:
+    session_length_bins: [0, 10, 20, 50, .inf]   # total events per session (error analysis)
+
+# -----------------------------------------------------------------------------
+# Efficiency benchmarks (RQ4) — in-process, no API / container
+# -----------------------------------------------------------------------------
+efficiency:
+  batch_sizes: [1, 256, 4096]   # 1 = single-session "real-time" latency
+  n_warmup: 20
+  n_repeats: 200
+  latency_percentiles: [50, 95, 99]
+  n_threads: 1                  # fixed for a fair per-model comparison
+  measure: [train_time_sec, latency_ms, throughput_per_sec, peak_memory_mb, model_size_mb]
+
+# -----------------------------------------------------------------------------
+# Explainability (RQ5)
+# -----------------------------------------------------------------------------
+explainability:
+  models: [random_forest, lightgbm, mlp, tabnet]
+  n_explain_samples: 2000       # test sessions explained
+  n_background: 200             # background set for KernelSHAP (MLP)
+  n_local_examples: 3           # waterfall plots per group (TP, FP, FN, TN)
+  error_groups: [true_positive, false_positive, false_negative, true_negative]
+
+# -----------------------------------------------------------------------------
+# Results logging (lightweight replacement for MLflow)
+# -----------------------------------------------------------------------------
+logging:
+  save_predictions: true
+  save_models: true
+  figure_format: png
+  figure_dpi: 300
