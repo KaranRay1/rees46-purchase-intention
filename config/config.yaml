@@ -110,7 +110,7 @@ features:
       - view_count
       - unique_products_count
       - session_duration_sec
-      - mean_gap_sec
+      - max_gap_sec             # longest pause between prefix events (mean gap = duration/(K-1), redundant)
     G2_cart_signals:
       - cart_count
       - remove_count

@@ -80,7 +80,7 @@ Imbalance: class weights in training + decision threshold tuned on validation (m
 
 | Group | Adds |
 |-------|------|
-| G1 activity | view_count, unique products, duration, mean inter-event gap |
+| G1 activity | view_count, unique products, duration, longest inter-event gap |
 | G2 + cart signals | cart_count, remove_count, position of first cart, last event type |
 | G3 + behavioural ratios | cart/view, remove/cart (ε = 1e-6) |
 | G4 + category hierarchy | top-level / sub category of most-viewed item, unique categories & brands |
