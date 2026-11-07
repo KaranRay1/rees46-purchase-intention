@@ -1,2 +1,43 @@
-# Python dependencies (no MLOps)
-# TODO: filled in the file-by-file build.
+# =============================================================================
+# REES46 purchase-intention research — Python dependencies (coursework version)
+# Target interpreter: Python 3.11 or 3.12 (best wheel support for torch, shap, pytorch-tabnet).
+# Install:  python3.11 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt
+# Deliberately NOT included: mlflow, fastapi, uvicorn, docker (product phase, see docs/archive/).
+# =============================================================================
+
+# --- Data handling (large-scale ingestion with lazy scans + Parquet) ---------
+polars>=1.0
+pyarrow>=15.0
+pandas>=2.1
+numpy>=1.26
+
+# --- Configuration ------------------------------------------------------------
+pyyaml>=6.0
+
+# --- Classical ML: baselines and tree ensembles -------------------------------
+scikit-learn>=1.4
+lightgbm>=4.3
+
+# --- Deep learning: MLP, GRU (PyTorch) and TabNet -----------------------------
+torch>=2.2
+pytorch-tabnet>=4.1
+
+# --- Statistics: bootstrap CIs, McNemar test ----------------------------------
+scipy>=1.11
+statsmodels>=0.14
+
+# --- Explainability -----------------------------------------------------------
+shap>=0.45
+
+# --- Efficiency measurement (memory, CPU) -------------------------------------
+psutil>=5.9
+
+# --- Plotting -----------------------------------------------------------------
+matplotlib>=3.8
+seaborn>=0.13
+
+# --- Notebooks, progress bars, tests ------------------------------------------
+jupyterlab>=4.0
+ipykernel>=6.29
+tqdm>=4.66
+pytest>=8.0
