@@ -91,6 +91,7 @@ split:
   train: 0.70
   val: 0.15
   test: 0.15
+  purge_boundary_overlap: true  # drop sessions that start in one split and end in the next
   robustness:
     per_month_test: true        # extra test sets, one per calendar month (full mode)
 
