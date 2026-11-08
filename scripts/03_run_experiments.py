@@ -60,14 +60,10 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 from sklearn.metrics import precision_recall_curve  # noqa: E402
 
-from src.config import resolve_path, set_seed  # noqa: E402
-from src.evaluation.efficiency import fit_with_memory  # noqa: E402
-from src.evaluation.metrics import tune_and_evaluate  # noqa: E402
+from _experiment import InputCache, latest_runs, primary_predictions, primary_run, train_and_log  # noqa: E402
+
+from src.config import resolve_path  # noqa: E402
 from src.evaluation.statistics import bootstrap_ci, holm, mcnemar, paired_bootstrap, seed_summary  # noqa: E402
-from src.features.preprocessing import prepare_splits  # noqa: E402
-from src.features.sequences import prepare_sequence_splits  # noqa: E402
-from src.models.base import build_model  # noqa: E402
-from src.utils.results_logger import load_predictions, load_runs, start_run  # noqa: E402
 
 EXPERIMENT = "rq1_models"
 METRICS = ["pr_auc", "roc_auc", "f1", "precision", "recall", "macro_f1"]
@@ -78,63 +74,6 @@ DEEP_TABULAR = ("mlp", "tabnet")
 # =============================================================================
 # Train
 # =============================================================================
-class InputCache:
-    """Prepared inputs per (K, preprocessing profile) and GRU sequences per K."""
-
-    def __init__(self, cfg: Mapping[str, Any]) -> None:
-        self.cfg = cfg
-        self._tab: dict[tuple[int, str], Any] = {}
-        self._seq: dict[int, Any] = {}
-
-    def get(self, k: int, model: str):
-        if model == "gru":
-            if k not in self._seq:
-                self._seq[k] = prepare_sequence_splits(self.cfg, k)
-            data, enc = self._seq[k]
-            extra = {"embedding_spec": enc.embedding_spec(), "num_features": enc.num_features}
-            return data, enc, extra, None
-        profile = self.cfg["preprocessing"]["model_profiles"][model]
-        if (k, profile) not in self._tab:
-            self._tab[(k, profile)] = prepare_splits(self.cfg, k, model)
-        data, pre = self._tab[(k, profile)]
-        extra = {"cat_dims": pre.categorical_dims()} if model == "tabnet" else {}
-        return data, pre, extra, pre.output_columns
-
-
-def _xy(split_data: Any, model_name: str):
-    return (split_data, split_data.y) if model_name == "gru" else (split_data.X, split_data.y)
-
-
-def train_one(cfg: Mapping[str, Any], cache: InputCache, model_name: str, k: int, seed: int) -> str:
-    """Train, evaluate and log one (model, K, seed). Returns the run id."""
-    data, prep, extra, columns = cache.get(k, model_name)
-    set_seed(seed)
-    model = build_model(model_name, cfg, seed=seed, columns=columns, **extra)
-    X_tr, y_tr = _xy(data["train"], model_name)
-    X_va, y_va = _xy(data["val"], model_name)
-
-    with start_run(cfg, EXPERIMENT, model_name, k=k, seed=seed, feature_set="all") as run:
-        train_mem = fit_with_memory(model, X_tr, y_tr, X_va, y_va)
-        res = tune_and_evaluate(model, data["val"], data["test"], cfg)
-        training = {"train_time_sec": model.train_time_sec, "train_peak_memory_mb": train_mem,
-                    "n_train": int(len(y_tr))}
-        for attr in ("best_iteration_", "best_epoch_", "best_val_score_"):
-            if getattr(model, attr, None) is not None:
-                training[attr.rstrip("_")] = getattr(model, attr)
-        if hasattr(model, "n_parameters"):
-            training["n_parameters"] = model.n_parameters()
-
-        run.log_params(model.get_params())
-        run.log_metrics({"threshold": res["threshold"], "val": res["val"], "test": res["test"], "training": training})
-        run.log_predictions("val", data["val"].session_ids, y_va, res["val_scores"], model.threshold)
-        run.log_predictions("test", data["test"].session_ids, data["test"].y, res["test_scores"], model.threshold)
-        run.log_model(model)
-        run.log_artifact("preprocessor" if model_name != "gru" else "sequence_encoder", prep)
-        if getattr(model, "history_", None):
-            run.log_artifact("training_history", model.history_)
-    return run.run_id
-
-
 def train_all(cfg: Mapping[str, Any], models: Sequence[str], ks: Sequence[int], seeds: Sequence[int]) -> list[dict]:
     cache = InputCache(cfg)
     done = []
@@ -142,36 +81,25 @@ def train_all(cfg: Mapping[str, Any], models: Sequence[str], ks: Sequence[int], 
     i = 0
     for k in ks:
         for m in models:
-            for seed in (seeds[:1] if m == "rule_based" else seeds):
+            for seed in (seeds[:1] if m == "rule_based" else seeds):   # the rule is deterministic
                 i += 1
-                run_id = train_one(cfg, cache, m, k, seed)
-                row = load_runs(cfg, EXPERIMENT).filter(pl.col("run_id") == run_id).row(0, named=True)
+                row = train_and_log(cfg, cache, EXPERIMENT, m, k, seed)
                 print(f"   [{i}/{total}] K={k:<2} {m:<20} seed={seed:<5} "
                       f"test PR-AUC={row['test_pr_auc']:.4f}  F1={row['test_f1']:.4f}  "
                       f"train={row['training_train_time_sec']:.1f}s", flush=True)
-                done.append({"run_id": run_id, "k": k, "model": m, "seed": seed})
+                done.append({"run_id": row["run_id"], "k": k, "model": m, "seed": seed})
     return done
 
 
 # =============================================================================
 # Analyse
 # =============================================================================
-def latest_runs(cfg: Mapping[str, Any]) -> pl.DataFrame:
-    """Most recent completed rq1 run per (K, model, seed) for the current data mode."""
-    runs = load_runs(cfg, EXPERIMENT)
-    if runs.height == 0:
-        raise RuntimeError("No completed rq1_models runs found; train first.")
-    runs = runs.filter(pl.col("data_mode") == cfg["data"]["mode"])
-    return runs.sort("started_at").group_by(["k", "model", "seed"], maintain_order=True).last()
-
-
 def _model_order(cfg: Mapping[str, Any], present: Sequence[str]) -> list[str]:
     return [m for m in cfg["models"]["enabled"] if m in present]
 
 
 def comparison_table(cfg: Mapping[str, Any], runs: pl.DataFrame, n_resamples: int) -> pl.DataFrame:
     """Mean ± std over seeds per (K, model) + PR-AUC bootstrap CI on the primary seed."""
-    primary = cfg["project"]["seeds"][0]
     conf = cfg["evaluation"]["bootstrap"]["confidence"]
     rows = []
     for k in sorted(runs["k"].unique().to_list()):
@@ -185,9 +113,7 @@ def comparison_table(cfg: Mapping[str, Any], runs: pl.DataFrame, n_resamples: in
                 s = seed_summary(part[f"test_{met}"].to_list())
                 row[f"{met}_mean"], row[f"{met}_std"] = s["mean"], s["std"]
             row["train_time_sec_mean"] = seed_summary(part["training_train_time_sec"].to_list())["mean"]
-            prim = part.filter(pl.col("seed") == primary)
-            prim = prim if prim.height else part.head(1)
-            preds = load_predictions(resolve_path(cfg, "runs_dir") / prim["run_id"][0], "test")
+            preds = primary_predictions(cfg, part)
             ci = bootstrap_ci(preds["y_true"].to_numpy(), preds["score"].to_numpy(), "pr_auc",
                               n_resamples=n_resamples, confidence=conf, seed=0)
             row["pr_auc_primary"], row["pr_auc_ci_low"], row["pr_auc_ci_high"] = ci["estimate"], ci["lower"], ci["upper"]
@@ -228,18 +154,14 @@ def pairwise_tests(
     (every other pair). Hypothesis verdicts use only the confirmatory family.
     """
     confirmatory = confirmatory or set()
-    primary = cfg["project"]["seeds"][0]
     conf = cfg["evaluation"]["bootstrap"]["confidence"]
-    runs_dir = resolve_path(cfg, "runs_dir")
     rows = []
     for k in sorted(runs["k"].unique().to_list()):
         preds = {}
         for m in _model_order(cfg, runs["model"].unique().to_list()):
             part = runs.filter((pl.col("k") == k) & (pl.col("model") == m))
-            prim = part.filter(pl.col("seed") == primary)
-            prim = prim if prim.height else part.head(1)
-            if prim.height:
-                preds[m] = load_predictions(runs_dir / prim["run_id"][0], "test").sort("user_session")
+            if part.height:
+                preds[m] = primary_predictions(cfg, part)
         for a, b in combinations(list(preds), 2):
             pa, pb = preds[a], preds[b]
             if not pa["user_session"].equals(pb["user_session"]):
@@ -343,16 +265,14 @@ def hypotheses(cfg: Mapping[str, Any], table: pl.DataFrame, tests: pl.DataFrame)
 
 
 def plot_pr_curves(cfg: Mapping[str, Any], runs: pl.DataFrame, k: int, path: Path) -> Path:
-    primary = cfg["project"]["seeds"][0]
     fig, ax = plt.subplots(figsize=(6, 5))
     base = None
     for m in _model_order(cfg, runs["model"].unique().to_list()):
         part = runs.filter((pl.col("k") == k) & (pl.col("model") == m))
-        prim = part.filter(pl.col("seed") == primary)
-        prim = prim if prim.height else part.head(1)
-        if not prim.height:
+        if not part.height:
             continue
-        p = load_predictions(resolve_path(cfg, "runs_dir") / prim["run_id"][0], "test")
+        prim = primary_run(cfg, part)
+        p = primary_predictions(cfg, part)
         y, s = p["y_true"].to_numpy(), p["score"].to_numpy()
         prec, rec, _ = precision_recall_curve(y, s)
         ax.step(rec, prec, where="post", label=f"{m} (AP {prim['test_pr_auc'][0]:.3f})", linewidth=1.2)
@@ -398,7 +318,7 @@ def analyse(cfg: Mapping[str, Any], n_resamples: int) -> dict[str, Any]:
     figures_dir = resolve_path(cfg, "figures_dir")
     tables_dir.mkdir(parents=True, exist_ok=True)
 
-    runs = latest_runs(cfg)
+    runs = latest_runs(cfg, EXPERIMENT)
     table = comparison_table(cfg, runs, n_resamples)
     tests = pairwise_tests(cfg, runs, n_resamples, confirmatory_pairs(table))
     by_k = by_k_table(table)
