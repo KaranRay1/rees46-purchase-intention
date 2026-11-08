@@ -263,6 +263,60 @@ def test_pareto_front_logic():
     assert set(mod.pareto_front(pts)) == {"slow_good", "best_both"}
 
 
+@pytest.fixture(scope="module")
+def explained(experiment):
+    pytest.importorskip("shap")
+    tmp, args, _ = experiment                       # explains the models saved by the RQ1 fixture
+    small = ["--set", "explainability.n_explain_samples=150", "--set", "explainability.n_background=50",
+             "--set", "explainability.n_local_examples=1"]
+    return tmp, _load("06_explain.py").main(args + small)
+
+
+def test_explain_tables_and_hypothesis(explained):
+    tmp, res = explained
+    r = res["per_k"][5]
+    models = ["logistic_regression", "random_forest", "lightgbm", "mlp", "tabnet"]
+    assert set(r["results"]) == set(models)
+    groups = r["groups"]
+    assert groups.height == 5 and set(groups.columns) >= set(models)
+    for m in models:
+        assert groups[m].sum() == pytest.approx(1.0)
+    assert set(r["agreement_groups"].columns) >= {"model_a", "model_b", "spearman_rho"}
+    assert set(r["error_profile"]["group"]) <= {"true_positive", "false_positive", "false_negative", "true_negative"}
+    assert r["error_profile"]["mean_total_events"].min() > 5        # eligible sessions have > K events
+    assert r["cohorts"]["n"].sum() == 150 * len(models)
+    for name in ("importance_features", "importance_groups", "rank_agreement", "attribution_by_error_group",
+                 "error_profile", "metrics_by_session_length"):
+        assert (tmp / "tables" / f"rq5_{name}_k5_synthetic.csv").exists()
+    h = res["hypothesis"]["H5_cart_signals_rank_highest_for_every_family"]
+    assert h["verdict"] in ("supported", "partly supported", "not supported") and len(h["evidence"]) == 5
+
+
+def test_length_bins():
+    import numpy as np
+    mod = _load("06_explain.py")
+    labels = mod.length_bins(np.array([6, 10, 19, 20, 49, 50, 300]), [0, 10, 20, 50, float("inf")])
+    assert labels.tolist() == ["[0, 10)", "[10, 20)", "[10, 20)", "[20, 50)", "[20, 50)", "[50, inf)", "[50, inf)"]
+
+
+def test_explain_figures(explained):
+    tmp, _ = explained
+    figs = {p.name for p in (tmp / "figures").glob("rq5_*.png")}
+    assert "rq5_compare_groups_k5_synthetic.png" in figs
+    assert "rq5_beeswarm_lightgbm_k5_synthetic.png" in figs
+    assert any(f.startswith("rq5_waterfall_lightgbm_k5") for f in figs)
+    assert not any(f.startswith("rq5_waterfall_tabnet") for f in figs)   # attention has no SHAP base value
+
+
+def test_explain_logs_runs(explained):
+    from src.config import load_config
+    from src.utils.results_logger import load_runs
+    tmp, _ = explained
+    cfg = load_config(overrides={"paths.all_runs_csv": str(tmp / "tables" / "all_runs.csv")})
+    runs = load_runs(cfg, "rq5_explain")
+    assert runs.height == 5 and runs["top_group"].is_not_null().all()
+
+
 def test_experiment_rejects_unknown_model(tmp_path):
     with pytest.raises(SystemExit):
         _load("03_run_experiments.py").main(_args(tmp_path) + ["--models", "xgboost"])
