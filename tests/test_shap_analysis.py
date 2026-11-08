@@ -11,6 +11,7 @@ from src.config import feature_list, load_config  # noqa: E402
 from src.data import sessionize, split  # noqa: E402
 from src.data.loader import ingest  # noqa: E402
 from src.explainability.shap_analysis import (  # noqa: E402
+    aggregate_groups,
     aggregate_onehot,
     compare_importance,
     error_groups,
@@ -130,6 +131,39 @@ def test_compare_importance_across_families(explained, cfg):
     assert cart & set(wide["feature"].head(5))                  # H5 holds on the synthetic signal
     same, c2 = compare_importance({"x": attrs["lightgbm"], "y": attrs["lightgbm"]})
     assert c2["spearman_rho"][0] == pytest.approx(1.0)
+
+
+def test_group_aggregation_is_exact(explained, cfg):
+    groups = cfg["features"]["groups"]
+    for name in ("lightgbm", "mlp"):
+        feat = aggregate_onehot(explained[name][0], feature_list(cfg))
+        grp = aggregate_groups(feat, groups)
+        assert grp.features == list(groups)
+        assert np.allclose(grp.values.sum(1), feat.values.sum(1))
+        cart = grp.values[:, grp.features.index("G2_cart_signals")]
+        idx = [feat.features.index(f) for f in groups["G2_cart_signals"]]
+        assert np.allclose(cart, feat.values[:, idx].sum(1))
+
+
+def test_cart_block_leads_every_model(explained, cfg):
+    feats, groups = feature_list(cfg), cfg["features"]["groups"]
+    by_feat = {n: aggregate_onehot(explained[n][0], feats) for n in ("logistic_regression", "lightgbm", "mlp")}
+    by_group = {n: aggregate_groups(a, groups) for n, a in by_feat.items()}
+    wide, _ = compare_importance(by_group)
+    assert wide["feature"][0] == "G2_cart_signals"          # synthetic signal lives in cart behaviour
+    for n in by_group:
+        top = wide.sort(n, descending=True)["feature"][0]
+        assert top == "G2_cart_signals", f"{n} ranks {top} first"
+
+
+def test_group_definition_must_cover_features(explained, cfg):
+    feat = aggregate_onehot(explained["lightgbm"][0], feature_list(cfg))
+    groups = dict(cfg["features"]["groups"])
+    groups.pop("G5_price_time")
+    with pytest.raises(ValueError, match="not grouped"):
+        aggregate_groups(feat, groups)
+    with pytest.raises(ValueError, match="repeated"):
+        aggregate_groups(feat, {**cfg["features"]["groups"], "dup": ["view_count"]})
 
 
 # ---------------------------------------------------------------- error groups

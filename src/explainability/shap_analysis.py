@@ -19,7 +19,9 @@ to 1) and **rank correlation** — both scale-free.
 
 One-hot columns (``main_category=electronics`` …) are summed back to their
 source feature (``main_category``) so every model is compared on the same 20
-features. (Summing is exact for additive SHAP values.)
+features, and ``aggregate_groups`` sums features into the G1–G5 groups, so
+correlated features (e.g. view_count vs cart_count) are judged as one block.
+(Summing is exact for additive SHAP values.)
 
 Error analysis
 --------------
@@ -182,6 +184,34 @@ def aggregate_onehot(attr: Attribution, features: Sequence[str]) -> Attribution:
         vals[:, j] = attr.values[:, idx].sum(axis=1)
         data[:, j] = attr.data[:, idx].argmax(axis=1)
     return Attribution(attr.model, attr.method, attr.scale, vals, attr.base_value, data, list(features))
+
+
+def aggregate_groups(attr: Attribution, groups: Mapping[str, Sequence[str]]) -> Attribution:
+    """Sum feature attributions into feature groups (e.g. G1–G5 from config).
+
+    Why: features inside a group move together (with K fixed, view + cart +
+    remove = K), and SHAP splits credit between correlated features
+    differently in each model. Summing within a group is exact for additive
+    attributions and gives a cleaner cross-model answer to "which kind of
+    behaviour matters" (H5).
+
+    Args:
+        attr: feature-level attribution (run ``aggregate_onehot`` first for one-hot models).
+        groups: ``{group name: [feature, ...]}`` — every feature must appear exactly once.
+
+    The plotted ``data`` of a group is set to 0 (a group has no single value),
+    so grouped beeswarms are uncoloured.
+    """
+    feats = attr.features
+    listed = [f for fs in groups.values() for f in fs]
+    missing = [f for f in feats if f not in listed]
+    unknown = [f for f in listed if f not in feats]
+    dupes = sorted({f for f in listed if listed.count(f) > 1})
+    if missing or unknown or dupes:
+        raise ValueError(f"Group definition mismatch: not grouped {missing}, unknown {unknown}, repeated {dupes}")
+    names = list(groups)
+    vals = np.column_stack([attr.values[:, [feats.index(f) for f in groups[g]]].sum(axis=1) for g in names])
+    return Attribution(attr.model, attr.method, attr.scale, vals, attr.base_value, np.zeros_like(vals), names)
 
 
 def global_importance(attr: Attribution) -> pl.DataFrame:

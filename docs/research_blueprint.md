@@ -80,8 +80,12 @@ Imbalance: class weights in training + decision threshold tuned on validation (m
 
 | Group | Adds |
 |-------|------|
-| G1 activity | view_count, unique products, duration, longest inter-event gap |
-| G2 + cart signals | cart_count, remove_count, position of first cart, last event type |
+| G1 activity | unique products, duration, longest inter-event gap (no cart information) |
+| G2 + cart signals | view_count, cart_count, remove_count, has_cart, position of first cart, last event type |
+
+`view_count` belongs to G2, not G1: with exactly K events, view = K − cart − remove, so it
+already encodes cart behaviour. Keeping it out of G1 makes each ablation step add information
+the earlier steps could not infer (a refinement of the proposal's "past activity" group).
 | G3 + behavioural ratios | cart/view, remove/cart (ε = 1e-6) |
 | G4 + category hierarchy | top-level / sub category of most-viewed item, unique categories & brands |
 | G5 + price & time context | price mean/max/sum/std, hour, weekday |

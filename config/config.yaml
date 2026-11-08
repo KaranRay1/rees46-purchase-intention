@@ -106,12 +106,14 @@ features:
   top_n_categories: 20          # other categories -> "other"; one-hot for LR / MLP
 
   groups:
+    # view_count lives in G2, not G1: with K fixed, view = K - cart - remove, so
+    # an "activity" group holding it would already encode the cart signal.
     G1_activity:
-      - view_count
       - unique_products_count
       - session_duration_sec
       - max_gap_sec             # longest pause between prefix events (mean gap = duration/(K-1), redundant)
-    G2_cart_signals:
+    G2_cart_signals:            # funnel counts + cart behaviour
+      - view_count
       - cart_count
       - remove_count
       - has_cart
