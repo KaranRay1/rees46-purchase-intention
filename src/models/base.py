@@ -127,4 +127,16 @@ def build_model(
     if name == "logistic_regression":
         from src.models.baselines import LogisticRegressionBaseline
         return LogisticRegressionBaseline(params, class_weight=class_weight, seed=seed, columns=columns)
+
+    n_jobs = int(cfg["project"].get("n_jobs", -1))
+    if name == "random_forest":
+        from src.models.tree_models import RandomForestModel
+        return RandomForestModel(params, class_weight=class_weight, seed=seed, n_jobs=n_jobs, columns=columns)
+    if name == "lightgbm":
+        from src.models.tree_models import LightGBMModel
+        cats = [c for c in cfg["features"]["categorical"] if columns is not None and c in columns]
+        return LightGBMModel(
+            params, class_weight=class_weight, seed=seed, n_jobs=n_jobs,
+            columns=columns, categorical_features=cats,
+        )
     raise NotImplementedError(f"Model {name!r} is not implemented yet.")
