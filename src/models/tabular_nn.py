@@ -18,6 +18,8 @@ TabNetModel  (pytorch-tabnet, ``ordinal_scaled`` profile)
 
 from __future__ import annotations
 
+import contextlib
+import io
 import warnings
 from typing import Any, Mapping, Sequence
 
@@ -192,8 +194,9 @@ class TabNetModel(BaseModel):
             if (counts > 0).all():
                 weight = torch.tensor(len(y_train) / (2.0 * counts), dtype=torch.float32)
         self.model = self._make()
-        with warnings.catch_warnings():
-            # Informational only: the library restores the best epoch's weights.
+        # The library prints an early-stopping line even with verbose=0, and warns that
+        # it restores the best epoch's weights; both are informational only.
+        with warnings.catch_warnings(), contextlib.redirect_stdout(io.StringIO()):
             warnings.filterwarnings("ignore", message="Best weights from best epoch")
             self.model.fit(
                 X_train, y_train,
