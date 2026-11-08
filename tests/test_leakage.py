@@ -134,6 +134,14 @@ def test_requires_enum_event_type(cfg):
         index_events(raw)
 
 
+def _pipeline_rank(cfg) -> pl.Expr:
+    """Event position using the same ordering as index_events (time, funnel order, product)."""
+    funnel = pl.col("event_type").cast(pl.Enum(cfg["data"]["event_types"]))
+    return pl.int_range(1, pl.len() + 1).over(
+        "user_session", order_by=[pl.col("event_time"), funnel, pl.col("product_id")]
+    )
+
+
 def test_features_ignore_everything_after_event_k(cfg):
     """Changing or adding events after position K must not change any feature."""
     from src.features.build_features import build_features
@@ -148,10 +156,7 @@ def test_features_ignore_everything_after_event_k(cfg):
 
     # Tamper with the future: inflate prices and turn views into carts for every
     # event that is not among the first K of its session.
-    rank = (
-        pl.int_range(1, pl.len() + 1).over("user_session", order_by=["event_time"])
-    )
-    tampered = base.with_columns(rank.alias("_r")).with_columns(
+    tampered = base.with_columns(_pipeline_rank(cfg).alias("_r")).with_columns(
         price=pl.when(pl.col("_r") > k).then(pl.col("price") * 10).otherwise(pl.col("price")),
         event_type=pl.when((pl.col("_r") > k) & (pl.col("event_type") == "view"))
         .then(pl.lit("cart"))
@@ -163,6 +168,27 @@ def test_features_ignore_everything_after_event_k(cfg):
     common = a.join(b.select("user_session"), on="user_session", how="semi")
     assert common.height > 0.9 * a.height
     assert common.equals(b.join(a.select("user_session"), on="user_session", how="semi"))
+
+
+def test_sequences_ignore_everything_after_event_k(cfg):
+    """GRU input must not change when events after position K change."""
+    from src.features.sequences import event_steps
+
+    base = generate_synthetic_events(n_sessions=1500, seed=22)
+    k = cfg["sessionize"]["default_k"]
+
+    def steps(events):
+        idx = index_events(clean_events(events.lazy(), cfg)[0])
+        sp = build_prefixes(idx, session_stats(idx), k)
+        labels = sp.sessions.select("user_session", TARGET).with_columns(split=pl.lit("train"))
+        return event_steps(sp.prefix_events, labels, "unknown").drop(TARGET)
+
+    tampered = base.with_columns(_pipeline_rank(cfg).alias("_r")).with_columns(
+        price=pl.when(pl.col("_r") > k).then(pl.col("price") * 10).otherwise(pl.col("price")),
+    ).drop("_r")
+
+    a, b = steps(base), steps(tampered)
+    assert a.height > 0 and a.equals(b)
 
 
 def test_run_writes_every_k(tmp_path):
