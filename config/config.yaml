@@ -301,9 +301,9 @@ efficiency:
 # Explainability (RQ5)
 # -----------------------------------------------------------------------------
 explainability:
-  models: [random_forest, lightgbm, mlp, tabnet]
+  models: [logistic_regression, random_forest, lightgbm, mlp, tabnet]
   n_explain_samples: 2000       # test sessions explained
-  n_background: 200             # background set for KernelSHAP (MLP)
+  n_background: 200             # training rows used as background by LinearSHAP (LR) and DeepSHAP (MLP)
   n_local_examples: 3           # waterfall plots per group (TP, FP, FN, TN)
   error_groups: [true_positive, false_positive, false_negative, true_negative]
 
