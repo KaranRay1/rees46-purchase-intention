@@ -139,4 +139,17 @@ def build_model(
             params, class_weight=class_weight, seed=seed, n_jobs=n_jobs,
             columns=columns, categorical_features=cats,
         )
+
+    device = str(cfg["project"].get("device", "cpu"))
+    if name == "mlp":
+        from src.models.tabular_nn import MLPModel
+        return MLPModel(params, class_weight=class_weight, seed=seed, device=device, columns=columns)
+    if name == "tabnet":
+        from src.models.tabular_nn import TabNetModel
+        if "cat_dims" not in extra:
+            raise ValueError("tabnet needs cat_dims=preprocessor.categorical_dims()")
+        return TabNetModel(
+            params, class_weight=class_weight, seed=seed, device=device,
+            columns=columns, cat_dims=extra["cat_dims"],
+        )
     raise NotImplementedError(f"Model {name!r} is not implemented yet.")

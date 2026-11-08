@@ -252,6 +252,7 @@ models:
     n_steps: 4
     gamma: 1.5
     lambda_sparse: 1.0e-4
+    cat_emb_dim: 4              # embedding size for each categorical column
     learning_rate: 2.0e-2
     batch_size: 4096
     virtual_batch_size: 512

@@ -122,4 +122,4 @@ def test_threshold_controls_predictions(built):
 
 def test_factory_not_implemented_yet():
     with pytest.raises(NotImplementedError):
-        build_model("tabnet", CFG, seed=0)
+        build_model("gru", CFG, seed=0)
