@@ -65,7 +65,7 @@ def print_table(rows: Sequence[Mapping[str, Any]], columns: Sequence[str] | None
 
     def fmt(v: Any) -> str:
         if isinstance(v, float):
-            return f"{v:.4f}" if abs(v) < 1 else f"{v:,.1f}"
+            return f"{v:,.0f}" if abs(v) >= 1000 else f"{v:.4g}"   # 4 significant digits
         if isinstance(v, int):
             return f"{v:,}"
         return "" if v is None else str(v)

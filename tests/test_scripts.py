@@ -61,6 +61,35 @@ def test_script_runs_from_command_line(tmp_path):
     assert "Summary for the report" in res.stdout
 
 
+def test_build_features_end_to_end(tmp_path, capsys):
+    args = _args(tmp_path, 3000)
+    _load("01_prepare_data.py").main(args + ["--no-report"])
+    summary = _load("02_build_features.py").main(args)
+    out = capsys.readouterr().out
+    assert "aligned" in out and "strongest differences" in out
+    for k in ("3", "5", "10"):
+        entry = summary["k"][k]
+        assert entry["checks"] == "passed" and entry["sequence_shape_train"][1] == int(k)
+        assert entry["sessions"]["train"] > entry["sessions"]["test"] > 0
+        assert (tmp_path / "tables" / f"feature_profile_synthetic_k{k}.csv").exists()
+    top = [r["feature"] for r in summary["k"]["5"]["top_smd"]]
+    assert {"cart_count", "has_cart", "view_count", "cart_to_view_ratio", "first_cart_position"} & set(top)
+
+
+def test_build_features_detects_broken_table():
+    mod = _load("02_build_features.py")
+    import polars as pl
+    from src.config import feature_list, load_config
+    cfg = load_config()
+    row = {f: 0 for f in feature_list(cfg)}
+    row.update({"user_session": "a", "split": "train", "target_purchase": 0,
+                "view_count": 1, "cart_count": 1, "remove_count": 0, "n_events_total": 9})
+    problems = mod.check_table(pl.DataFrame([row, row]), cfg, k=5)
+    assert any("duplicate" in p for p in problems)
+    assert any("analysis-only" in p for p in problems)
+    assert any("!= K" in p for p in problems)
+
+
 def test_bad_override_fails_clearly(tmp_path):
     with pytest.raises(Exception, match="Unknown config key"):
         _load("01_prepare_data.py").main(_args(tmp_path) + ["--set", "split.trian=0.7"])
