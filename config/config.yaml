@@ -144,6 +144,35 @@ features:
   default_feature_set: all      # main experiments use G1–G5
 
 # -----------------------------------------------------------------------------
+# Preprocessing (fitted on the TRAIN split only, then applied to val/test)
+# Each tabular model uses one profile:
+#   onehot_scaled  -> log1p + standardise numbers, one-hot categories  (LR, MLP)
+#   ordinal_scaled -> log1p + standardise numbers, integer categories  (TabNet embeddings)
+#   raw            -> numbers untouched, integer categories            (RF, LightGBM, rule)
+# -----------------------------------------------------------------------------
+preprocessing:
+  log1p_features:               # heavy-tailed, non-negative
+    - session_duration_sec
+    - max_gap_sec
+    - cart_to_view_ratio        # can reach count/epsilon when the denominator is 0
+    - remove_to_cart_ratio
+    - price_mean
+    - price_max
+    - price_sum
+    - price_std
+  profiles:
+    onehot_scaled: {log1p: true, scale: true, categorical: onehot}
+    ordinal_scaled: {log1p: true, scale: true, categorical: ordinal}
+    raw: {log1p: false, scale: false, categorical: ordinal}
+  model_profiles:
+    rule_based: raw
+    logistic_regression: onehot_scaled
+    random_forest: raw
+    lightgbm: raw
+    mlp: onehot_scaled
+    tabnet: ordinal_scaled
+
+# -----------------------------------------------------------------------------
 # Per-event sequences for the GRU (same K events as the tabular features)
 # -----------------------------------------------------------------------------
 sequences:

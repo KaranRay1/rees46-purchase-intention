@@ -120,8 +120,8 @@ def validate_config(cfg: Mapping[str, Any]) -> None:
 
     required = [
         "project", "paths", "data", "sessionize", "split", "features",
-        "sequences", "imbalance", "models", "evaluation", "efficiency",
-        "explainability", "logging",
+        "preprocessing", "sequences", "imbalance", "models", "evaluation",
+        "efficiency", "explainability", "logging",
     ]
     missing = [s for s in required if s not in cfg]
     if missing:
@@ -173,6 +173,19 @@ def validate_config(cfg: Mapping[str, Any]) -> None:
             errors.append(f"features.ablation_ladder[{i}] uses unknown groups: {bad}")
     if feats.get("epsilon", 0) <= 0:
         errors.append("features.epsilon must be > 0.")
+
+    # preprocessing
+    pre = cfg["preprocessing"]
+    bad_log = [f for f in pre.get("log1p_features", []) if f not in all_features]
+    if bad_log:
+        errors.append(f"preprocessing.log1p_features not defined in any group: {bad_log}")
+    profiles = pre.get("profiles", {})
+    for name, prof in profiles.items():
+        if prof.get("categorical") not in ("onehot", "ordinal"):
+            errors.append(f"preprocessing.profiles.{name}.categorical must be onehot or ordinal.")
+    bad_prof = {m: p for m, p in pre.get("model_profiles", {}).items() if p not in profiles}
+    if bad_prof:
+        errors.append(f"preprocessing.model_profiles use unknown profiles: {bad_prof}")
 
     # models
     enabled = cfg["models"].get("enabled", [])
