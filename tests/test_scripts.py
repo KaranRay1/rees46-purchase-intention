@@ -90,6 +90,84 @@ def test_build_features_detects_broken_table():
     assert any("!= K" in p for p in problems)
 
 
+FAST = [
+    "--set", "models.random_forest.n_estimators=30",
+    "--set", "models.lightgbm.n_estimators=100",
+    "--set", "models.lightgbm.early_stopping_rounds=10",
+    "--set", "models.mlp.max_epochs=3",
+    "--set", "models.tabnet.max_epochs=2",
+    "--set", "models.tabnet.batch_size=512",
+    "--set", "models.gru.max_epochs=3",
+]
+
+
+@pytest.fixture(scope="module")
+def experiment(tmp_path_factory):
+    pytest.importorskip("lightgbm", exc_type=ImportError)
+    pytest.importorskip("torch")
+    tmp = tmp_path_factory.mktemp("rq1")
+    args = _args(tmp, 3000) + FAST
+    _load("01_prepare_data.py").main(args + ["--no-report"])
+    _load("02_build_features.py").main(args + ["--skip-sequences"])
+    res = _load("03_run_experiments.py").main(
+        args + ["--seeds", "42", "7", "--n-resamples", "50"]
+    )
+    return tmp, args, res
+
+
+def test_experiment_logs_every_run(experiment):
+    from src.config import load_config
+    tmp, _, _ = experiment
+    cfg = load_config(overrides={"paths.all_runs_csv": str(tmp / "tables" / "all_runs.csv")})
+    from src.utils.results_logger import load_runs
+    runs = load_runs(cfg, "rq1_models")
+    # 6 trained models x 3 K x 2 seeds + rule x 3 K x 1 seed
+    assert runs.height == 6 * 3 * 2 + 3
+    assert runs["status"].unique().to_list() == ["completed"]
+    for run_id in runs["run_id"].head(3):
+        files = {p.name for p in (tmp / "runs" / run_id).iterdir()}
+        assert {"predictions.parquet", "model.pkl", "metrics.json", "artifacts"} <= files
+
+
+def test_experiment_tables_and_figures(experiment):
+    tmp, _, res = experiment
+    t = res["table"]
+    assert t.height == 7 * 3 and set(t["k"]) == {3, 5, 10}
+    assert (t["pr_auc_ci_low"] <= t["pr_auc_primary"]).all() and (t["pr_auc_primary"] <= t["pr_auc_ci_high"]).all()
+    assert t.filter(t["model"] == "rule_based")["n_seeds"].to_list() == [1, 1, 1]
+    tests = res["tests"]
+    assert tests.height == 21 * 3                                  # all pairs of 7 models per K
+    assert (tests["p_bootstrap_holm"] >= tests["p_bootstrap"]).all()
+    conf = tests.filter(tests["family"] == "confirmatory")
+    assert conf.height == 4 * 3 + 1                                # 4 models vs LR at each K + GRU vs best at K=10
+    no_gru = conf.filter((conf["model_a"] != "gru") & (conf["model_b"] != "gru"))   # GRU's opponent may be LR
+    assert no_gru.height == 12
+    assert ((no_gru["model_a"] == "logistic_regression") | (no_gru["model_b"] == "logistic_regression")).all()
+    gru = conf.filter((conf["model_a"] == "gru") | (conf["model_b"] == "gru"))
+    assert gru.height == 1 and gru["k"][0] == 10
+    assert res["hypotheses"]["confirmatory_tests"] == 13
+    for name in ("rq1_model_comparison", "rq1_pairwise_tests", "rq2_by_k"):
+        assert (tmp / "tables" / f"{name}_synthetic.csv").exists()
+    assert (tmp / "figures" / "rq2_metrics_vs_k_synthetic.png").exists()
+    assert (tmp / "figures" / "rq1_pr_curves_k5_synthetic.png").exists()
+    hyp = res["hypotheses"]
+    for key in ("H1a_trees_beat_logistic_regression", "H1b_deep_tabular_beat_logistic_regression",
+                "H1c_gru_matches_best_aggregated_at_max_k", "H2_performance_rises_with_k_diminishing"):
+        assert hyp[key]["verdict"] in ("supported", "partly supported", "not supported")
+
+
+def test_analyse_only_reproduces_tables(experiment):
+    tmp, args, res = experiment
+    again = _load("03_run_experiments.py").main(args + ["--analyse-only", "--n-resamples", "50"])
+    assert again["table"].equals(res["table"])
+    assert again["tests"].equals(res["tests"])
+
+
+def test_experiment_rejects_unknown_model(tmp_path):
+    with pytest.raises(SystemExit):
+        _load("03_run_experiments.py").main(_args(tmp_path) + ["--models", "xgboost"])
+
+
 def test_bad_override_fails_clearly(tmp_path):
     with pytest.raises(Exception, match="Unknown config key"):
         _load("01_prepare_data.py").main(_args(tmp_path) + ["--set", "split.trian=0.7"])
