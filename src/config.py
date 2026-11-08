@@ -173,6 +173,18 @@ def validate_config(cfg: Mapping[str, Any]) -> None:
             errors.append(f"features.ablation_ladder[{i}] uses unknown groups: {bad}")
     if feats.get("epsilon", 0) <= 0:
         errors.append("features.epsilon must be > 0.")
+    n_steps = len(feats.get("ablation_ladder", []))
+    names_seen: set[str] = set()
+    for i, var in enumerate(feats.get("ablation_variants", []) or []):
+        name = var.get("name")
+        if not name or name in names_seen:
+            errors.append(f"features.ablation_variants[{i}] needs a unique name.")
+        names_seen.add(name)
+        bad = [g for g in var.get("groups", []) if g not in groups]
+        if not var.get("groups") or bad:
+            errors.append(f"features.ablation_variants[{i}] has missing or unknown groups: {bad}")
+        if not isinstance(var.get("compare_to"), int) or not 1 <= var["compare_to"] <= n_steps:
+            errors.append(f"features.ablation_variants[{i}].compare_to must be a ladder step 1..{n_steps}.")
 
     # preprocessing
     pre = cfg["preprocessing"]

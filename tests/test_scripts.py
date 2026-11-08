@@ -163,6 +163,61 @@ def test_analyse_only_reproduces_tables(experiment):
     assert again["tests"].equals(res["tests"])
 
 
+@pytest.fixture(scope="module")
+def ablation(experiment):
+    tmp, args, _ = experiment                       # reuses prepared data from the RQ1 fixture
+    res = _load("04_run_ablation.py").main(args + ["--seeds", "42", "7", "--n-resamples", "50"])
+    return tmp, args, res
+
+
+def test_ablation_tables(ablation):
+    from src.config import feature_list, load_config
+    tmp, _, res = ablation
+    cfg = load_config()
+    t = res["table"]
+    assert t.height == 3 * 2 * (5 + 1)                               # K x models x (ladder steps + variant)
+    assert set(t["n_seeds"]) == {2}
+    ladder = t.filter(~t["is_variant"])
+    sizes = ladder.filter((ladder["k"] == 5) & (ladder["model"] == "lightgbm")).sort("step")["n_inputs"].to_list()
+    assert sizes == sorted(sizes) and sizes[-1] == len(feature_list(cfg))  # raw profile: 1 column per feature
+    assert ladder.filter(ladder["step"] == 1)["pr_auc_gain"].null_count() == 6  # no gain for the first step
+    var = t.filter(t["is_variant"])
+    assert var.height == 6 and set(var["step"]) == {2} and set(var["feature_set"]) == {"V:ratios_instead_of_counts"}
+    g1 = len(cfg["features"]["groups"]["G1_activity"])
+    g3 = len(cfg["features"]["groups"]["G3_behavioural_ratios"])
+    assert set(var.filter(var["model"] == "lightgbm")["n_inputs"]) == {g1 + g3}
+    tests = res["tests"]
+    assert tests.height == 3 * 2 * (4 + 2)                           # consecutive steps + variant vs S2 and S1
+    conf = tests.filter(tests["family"] == "confirmatory")
+    assert conf.height == 6 and set(conf["added"]) == {"G3"}
+    vt = tests.filter(tests["family"] == "variant")
+    assert vt.height == 12 and set(vt["step"]) == {1, 2}
+    assert "exploratory_ratios_instead_of_counts" in res["hypothesis"]
+    for name in ("rq3_ablation", "rq3_step_tests"):
+        assert (tmp / "tables" / f"{name}_synthetic.csv").exists()
+    assert (tmp / "figures" / "rq3_ablation_synthetic.png").exists()
+    assert res["hypothesis"]["H3_behavioural_ratios_add_pr_auc"]["verdict"] in (
+        "supported", "partly supported", "not supported")
+
+
+def test_ablation_cart_step_helps(ablation):
+    """Synthetic signal lives in cart behaviour: adding G2 should raise PR-AUC for both models."""
+    _, _, res = ablation
+    g2 = res["tests"].filter(res["tests"]["added"] == "G2")
+    assert (g2["pr_auc_gain"] > 0).mean() >= 0.8
+
+
+def test_ablation_analyse_only_matches(ablation):
+    _, args, res = ablation
+    again = _load("04_run_ablation.py").main(args + ["--analyse-only", "--n-resamples", "50"])
+    assert again["table"].equals(res["table"]) and again["tests"].equals(res["tests"])
+
+
+def test_ablation_rejects_model_outside_ladder(tmp_path):
+    with pytest.raises(SystemExit):
+        _load("04_run_ablation.py").main(_args(tmp_path) + ["--models", "gru"])
+
+
 def test_experiment_rejects_unknown_model(tmp_path):
     with pytest.raises(SystemExit):
         _load("03_run_experiments.py").main(_args(tmp_path) + ["--models", "xgboost"])

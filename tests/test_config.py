@@ -53,6 +53,9 @@ def test_unknown_override_key_raises():
         ({"data.mode": "prod"}, "data.mode"),
         ({"models.enabled": ["lightgbm", "xgboost"]}, "unknown models"),
         ({"features.categorical": ["nonexistent"]}, "not defined in any group"),
+        ({"features.ablation_variants": [{"name": "x", "groups": ["G9"], "compare_to": 2}]}, "unknown groups"),
+        ({"features.ablation_variants": [{"name": "x", "groups": ["G1_activity"], "compare_to": 9}]},
+         "compare_to"),
     ],
 )
 def test_invalid_settings_raise(override, message):

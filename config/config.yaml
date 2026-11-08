@@ -142,6 +142,15 @@ features:
     - [G1_activity, G2_cart_signals, G3_behavioural_ratios]
     - [G1_activity, G2_cart_signals, G3_behavioural_ratios, G4_category_hierarchy]
     - [G1_activity, G2_cart_signals, G3_behavioural_ratios, G4_category_hierarchy, G5_price_time]
+  # Extra feature sets trained next to the ladder (exploratory). Each is compared
+  # with ladder step `compare_to` (1-based) and with step 1.
+  # ratios_instead_of_counts: with K fixed, the ratios are functions of the G2
+  # counts, so "G3 on top of G2" (H3) can add little by construction. This asks
+  # instead whether the ratios can REPLACE the cart block: G1+G3 vs G1+G2.
+  ablation_variants:
+    - name: ratios_instead_of_counts
+      groups: [G1_activity, G3_behavioural_ratios]
+      compare_to: 2
   ablation_models: [lightgbm, mlp]
   default_feature_set: all      # main experiments use G1–G5
 
