@@ -120,6 +120,6 @@ def test_threshold_controls_predictions(built):
         lr.set_threshold(1.5)
 
 
-def test_factory_not_implemented_yet():
-    with pytest.raises(NotImplementedError):
-        build_model("gru", CFG, seed=0)
+def test_factory_rejects_unknown_model():
+    with pytest.raises(Exception):
+        build_model("xgboost", CFG, seed=0)
