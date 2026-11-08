@@ -218,6 +218,51 @@ def test_ablation_rejects_model_outside_ladder(tmp_path):
         _load("04_run_ablation.py").main(_args(tmp_path) + ["--models", "gru"])
 
 
+@pytest.fixture(scope="module")
+def benchmark(experiment):
+    tmp, args, _ = experiment                       # benchmarks the models saved by the RQ1 fixture
+    fast = ["--set", "efficiency.n_repeats=5", "--set", "efficiency.n_warmup=1",
+            "--set", "efficiency.batch_sizes=[1, 64]"]
+    return tmp, _load("05_benchmark_latency.py").main(args + fast)
+
+
+def test_benchmark_table_and_outputs(benchmark):
+    tmp, res = benchmark
+    t = res["table"]
+    assert t.height == 7 * 3
+    assert (t["latency_b1_p50_ms"] <= t["latency_b1_p95_ms"]).all()
+    assert (t["model_size_mb"] > 0).all() and (t["n_threads"] == 1).all()
+    assert t.filter(t["model"] == "gru")["n_parameters"][0] > 0
+    for name in ("rq4_efficiency_synthetic.csv", "rq4_hardware_synthetic.json", "rq4_hypothesis_synthetic.json"):
+        assert (tmp / "tables" / name).exists()
+    assert (tmp / "figures" / "rq4_pareto_synthetic.png").exists()
+    a = res["assessment"]
+    assert set(a["per_k"]) == {"3", "5", "10"}
+    assert a["H4_trees_dominate_accuracy_latency_front"]["verdict"] in ("supported", "partly supported", "not supported")
+    for info in a["per_k"].values():
+        assert set(info["pareto_front_non_baseline"]) <= {"random_forest", "lightgbm", "mlp", "tabnet", "gru"}
+        assert info["pareto_front_all_models"]
+
+
+def test_benchmark_logs_runs(benchmark):
+    from src.config import load_config
+    from src.utils.results_logger import load_runs
+    tmp, res = benchmark
+    cfg = load_config(overrides={"paths.all_runs_csv": str(tmp / "tables" / "all_runs.csv")})
+    runs = load_runs(cfg, "rq4_efficiency")
+    assert runs.height == res["table"].height
+    assert runs["efficiency_latency_b1_p95_ms"].is_not_null().all()
+
+
+def test_pareto_front_logic():
+    import polars as pl
+    mod = _load("05_benchmark_latency.py")
+    pts = pl.DataFrame({"model": ["fast_bad", "slow_good", "dominated", "best_both"],
+                        "latency_b1_p95_ms": [0.1, 5.0, 6.0, 0.05],
+                        "test_pr_auc_mean": [0.20, 0.40, 0.30, 0.25]})
+    assert set(mod.pareto_front(pts)) == {"slow_good", "best_both"}
+
+
 def test_experiment_rejects_unknown_model(tmp_path):
     with pytest.raises(SystemExit):
         _load("03_run_experiments.py").main(_args(tmp_path) + ["--models", "xgboost"])

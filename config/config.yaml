@@ -306,6 +306,9 @@ efficiency:
   n_repeats: 200
   latency_percentiles: [50, 95, 99]
   n_threads: 1                  # fixed for a fair per-model comparison
+  # Model-time budget for one session (p95, batch size 1). An assumption to state in the
+  # report: web pages commonly target ~100 ms end to end, so the model gets a small share.
+  realtime_budget_ms: 10
   measure: [train_time_sec, latency_ms, throughput_per_sec, peak_memory_mb, model_size_mb]
 
 # -----------------------------------------------------------------------------
