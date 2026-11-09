@@ -37,7 +37,7 @@ improve on tabular machine learning for this task?
 | RQ2 | **How early?** How does performance change with prefix length K ∈ {3, 5, 10}? | both (ablation section) | Same grid, plotted vs K |
 | RQ3 | **Which features?** What does each feature group add — especially behavioural ratios? | Merve (ratios) + Karan (feature ladder) | Ablation ladder G1→G5 on LightGBM + MLP |
 | RQ4 | **Efficiency / real-time feasibility.** What is the accuracy vs latency, throughput, memory and size trade-off? | replaces Karan's MLOps RQ2 | In-process benchmarks, fixed hardware |
-| RQ5 | **Explainability.** Which behaviours drive predictions, do model families rely on the same signals, and what characterises false positives/negatives? | Merve RQ2 | TreeSHAP (RF, LGBM), KernelSHAP sample (MLP), TabNet masks; SHAP on error groups |
+| RQ5 | **Explainability.** Which behaviours drive predictions, do model families rely on the same signals, and what characterises false positives/negatives? | Merve RQ2 | On a test sample: TreeSHAP (RF, LGBM), LinearSHAP (LR), DeepSHAP (MLP; GradientSHAP fallback), TabNet attention masks; shares summed to feature groups; SHAP on error groups. GRU covered by model-agnostic error overlap |
 
 **Hypotheses**
 - H1a: RF / LightGBM with behavioural ratios > LR baseline on F1 and PR-AUC (Merve H1).
@@ -46,7 +46,7 @@ improve on tabular machine learning for this task?
 - H2: performance rises with K, with diminishing gains from 5 → 10.
 - H3: adding behavioural ratios gives a significant PR-AUC gain over counts only.
 - H4: tree models dominate the accuracy–latency Pareto front on CPU.
-- H5: cart-related features rank highest in SHAP across all model families.
+- H5: cart-related features (group G2) rank highest in SHAP across all model families (TabNet: attention shares).
 
 ---
 
