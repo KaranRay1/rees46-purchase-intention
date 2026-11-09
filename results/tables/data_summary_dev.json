@@ -1,0 +1,150 @@
+{
+  "mode": "dev",
+  "cleaning": {
+    "mode": "dev",
+    "sources": [
+      "2019-Oct.parquet"
+    ],
+    "rows_in": 42448764,
+    "removed": {
+      "unparseable_event_time": 0,
+      "null_session": 2,
+      "unknown_event_type": 0,
+      "non_positive_or_null_price": 68673,
+      "duplicate_rows": 30217,
+      "session_sampling": 0,
+      "over_long_sessions": 104147
+    },
+    "rows_out": 42245725,
+    "sessions_in": 9244422,
+    "sessions_out": 9222333,
+    "purchase_sessions_out": 629343
+  },
+  "sessionize": {
+    "3": {
+      "sessions_total": 9222333,
+      "too_short": 5840170,
+      "purchase_within_prefix": 142173,
+      "eligible": 3239990,
+      "positives": 310417,
+      "k": 3,
+      "positive_rate": 0.0958080117531227,
+      "mode": "dev"
+    },
+    "5": {
+      "sessions_total": 9222333,
+      "too_short": 7061595,
+      "purchase_within_prefix": 100913,
+      "eligible": 2059825,
+      "positives": 177715,
+      "k": 5,
+      "positive_rate": 0.08627674681101549,
+      "mode": "dev"
+    },
+    "10": {
+      "sessions_total": 9222333,
+      "too_short": 8303899,
+      "purchase_within_prefix": 45189,
+      "eligible": 873245,
+      "positives": 68438,
+      "k": 10,
+      "positive_rate": 0.0783720490813002,
+      "mode": "dev"
+    }
+  },
+  "split_cutoffs": {
+    "computed_from_k": 3,
+    "n_sessions": 3239990,
+    "val_start": "2019-10-22T08:26:45+00:00",
+    "test_start": "2019-10-26T19:59:30+00:00"
+  },
+  "splits": {
+    "3": {
+      "k": 3,
+      "sessions_kept": 3238230,
+      "purged_boundary_sessions": 1760,
+      "train": {
+        "sessions": 2266794,
+        "fraction": 0.7000101907523555,
+        "positives": 219615,
+        "positive_rate": 0.09688352801357336,
+        "first_start": "2019-10-01T00:00:01+00:00",
+        "last_start": "2019-10-22T08:25:15+00:00"
+      },
+      "val": {
+        "sessions": 485437,
+        "fraction": 0.1499081288234622,
+        "positives": 47573,
+        "positive_rate": 0.09800035843992114,
+        "first_start": "2019-10-22T08:26:45+00:00",
+        "last_start": "2019-10-26T19:58:22+00:00"
+      },
+      "test": {
+        "sessions": 485999,
+        "fraction": 0.15008168042418235,
+        "positives": 43033,
+        "positive_rate": 0.08854544968199524,
+        "first_start": "2019-10-26T19:59:30+00:00",
+        "last_start": "2019-10-31T23:59:10+00:00"
+      }
+    },
+    "5": {
+      "k": 5,
+      "sessions_kept": 2058406,
+      "purged_boundary_sessions": 1419,
+      "train": {
+        "sessions": 1440479,
+        "fraction": 0.6998031486499748,
+        "positives": 125812,
+        "positive_rate": 0.08734039163361632,
+        "first_start": "2019-10-01T00:00:01+00:00",
+        "last_start": "2019-10-22T08:25:07+00:00"
+      },
+      "val": {
+        "sessions": 308271,
+        "fraction": 0.14976200030509043,
+        "positives": 27316,
+        "positive_rate": 0.08861034609158824,
+        "first_start": "2019-10-22T08:26:45+00:00",
+        "last_start": "2019-10-26T19:57:08+00:00"
+      },
+      "test": {
+        "sessions": 309656,
+        "fraction": 0.15043485104493476,
+        "positives": 24440,
+        "positive_rate": 0.07892629240189113,
+        "first_start": "2019-10-26T19:59:30+00:00",
+        "last_start": "2019-10-31T23:58:29+00:00"
+      }
+    },
+    "10": {
+      "k": 10,
+      "sessions_kept": 872364,
+      "purged_boundary_sessions": 881,
+      "train": {
+        "sessions": 609845,
+        "fraction": 0.6990717177691881,
+        "positives": 48363,
+        "positive_rate": 0.07930375751215472,
+        "first_start": "2019-10-01T00:00:01+00:00",
+        "last_start": "2019-10-22T08:23:30+00:00"
+      },
+      "val": {
+        "sessions": 130589,
+        "fraction": 0.14969553993516468,
+        "positives": 10476,
+        "positive_rate": 0.08022115185811975,
+        "first_start": "2019-10-22T08:26:48+00:00",
+        "last_start": "2019-10-26T19:54:10+00:00"
+      },
+      "test": {
+        "sessions": 131930,
+        "fraction": 0.15123274229564723,
+        "positives": 9517,
+        "positive_rate": 0.07213673917986811,
+        "first_start": "2019-10-26T19:59:34+00:00",
+        "last_start": "2019-10-31T23:53:37+00:00"
+      }
+    }
+  }
+}

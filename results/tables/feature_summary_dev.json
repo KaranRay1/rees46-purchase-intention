@@ -1,0 +1,157 @@
+{
+  "mode": "dev",
+  "features": [
+    "unique_products_count",
+    "session_duration_sec",
+    "max_gap_sec",
+    "view_count",
+    "cart_count",
+    "has_cart",
+    "first_cart_position",
+    "last_event_type",
+    "cart_to_view_ratio",
+    "unique_categories_count",
+    "unique_brands_count",
+    "main_category",
+    "price_mean",
+    "price_max",
+    "price_sum",
+    "price_std",
+    "hour_of_day",
+    "day_of_week"
+  ],
+  "k": {
+    "3": {
+      "sessions": {
+        "train": 2266794,
+        "val": 485437,
+        "test": 485999
+      },
+      "checks": "passed",
+      "sequence_shape_train": [
+        2266794,
+        3
+      ],
+      "embedding_spec": {
+        "event_type": [
+          3,
+          4
+        ],
+        "main_category": [
+          15,
+          8
+        ]
+      },
+      "top_smd": [
+        {
+          "feature": "has_cart",
+          "smd": 0.7289628881190737
+        },
+        {
+          "feature": "view_count",
+          "smd": -0.690860774474971
+        },
+        {
+          "feature": "cart_count",
+          "smd": 0.690860774474971
+        },
+        {
+          "feature": "first_cart_position",
+          "smd": -0.6655866833559019
+        },
+        {
+          "feature": "unique_products_count",
+          "smd": -0.5550093864956729
+        }
+      ]
+    },
+    "5": {
+      "sessions": {
+        "train": 1440479,
+        "val": 308271,
+        "test": 309656
+      },
+      "checks": "passed",
+      "sequence_shape_train": [
+        1440479,
+        5
+      ],
+      "embedding_spec": {
+        "event_type": [
+          3,
+          4
+        ],
+        "main_category": [
+          15,
+          8
+        ]
+      },
+      "top_smd": [
+        {
+          "feature": "has_cart",
+          "smd": 0.6837790523674275
+        },
+        {
+          "feature": "view_count",
+          "smd": -0.6199792674968165
+        },
+        {
+          "feature": "cart_count",
+          "smd": 0.619979267496816
+        },
+        {
+          "feature": "first_cart_position",
+          "smd": -0.5937393193544539
+        },
+        {
+          "feature": "unique_products_count",
+          "smd": -0.5545428695119461
+        }
+      ]
+    },
+    "10": {
+      "sessions": {
+        "train": 609845,
+        "val": 130589,
+        "test": 131930
+      },
+      "checks": "passed",
+      "sequence_shape_train": [
+        609845,
+        10
+      ],
+      "embedding_spec": {
+        "event_type": [
+          3,
+          4
+        ],
+        "main_category": [
+          15,
+          8
+        ]
+      },
+      "top_smd": [
+        {
+          "feature": "has_cart",
+          "smd": 0.5687978843289859
+        },
+        {
+          "feature": "unique_products_count",
+          "smd": -0.4906950919566713
+        },
+        {
+          "feature": "view_count",
+          "smd": -0.4725162241918019
+        },
+        {
+          "feature": "cart_count",
+          "smd": 0.4725162241918019
+        },
+        {
+          "feature": "price_std",
+          "smd": -0.47119064800310406
+        }
+      ]
+    }
+  }
+}

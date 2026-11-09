@@ -6,5 +6,6 @@ __pycache__/
 data/raw/*
 data/interim/*
 data/processed/**/*.parquet
+data/processed/**/*.json
 results/runs/*
 !**/.gitkeep
