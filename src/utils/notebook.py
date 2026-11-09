@@ -110,6 +110,29 @@ def ensure_features(cfg: Mapping[str, Any]) -> None:
     )
 
 
+def model_colours(cfg: Mapping[str, Any]) -> dict[str, str]:
+    """One fixed colour per model, in ``models.enabled`` order (stable across every figure)."""
+    return {m: PALETTE[i % len(PALETTE)] for i, m in enumerate(cfg["models"]["enabled"])}
+
+
+def load_result(cfg: Mapping[str, Any], stem: str, script: str) -> Any:
+    """Read ``tables_dir/<stem>_<mode>.csv|json`` written by an experiment script.
+
+    Returns a Polars DataFrame (CSV), a dict (JSON) or ``None`` when the file is
+    missing, after printing which script produces it, so a notebook can skip a
+    section instead of failing when only some experiments have been run.
+    """
+    import polars as pl
+
+    base = resolve_path(cfg, "tables_dir") / f"{stem}_{cfg['data']['mode']}"
+    for ext in (".csv", ".json"):
+        path = base.with_suffix(ext)
+        if path.exists():
+            return pl.read_csv(path) if ext == ".csv" else json.loads(path.read_text())
+    print(f"[missing] {base.name}.csv/.json — run `python scripts/{script} --mode {cfg['data']['mode']}`")
+    return None
+
+
 def use_style() -> None:
     """Quiet, report-ready matplotlib defaults: recessive axes and grid, fixed colour order."""
     plt.rcParams.update({
