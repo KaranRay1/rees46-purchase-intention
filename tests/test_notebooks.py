@@ -172,10 +172,12 @@ def run_notebook(tmp_path_factory):
         _script("04_run_ablation.py").main(args + ["--seeds", "42", "--n-resamples", "30"])
         _script("05_benchmark_latency.py").main(args + ["--set", "efficiency.n_repeats=3", "--set", "efficiency.n_warmup=1",
                                                         "--set", "efficiency.batch_sizes=[1, 32]"])
+        _script("06_explain.py").main(args + ["--set", "explainability.n_explain_samples=200",
+                                              "--set", "explainability.n_background=30"])
         produced.add("results")
 
     def run(name: str):
-        if name.startswith("03"):
+        if name[:2] in ("03", "04"):
             results()
         nb = nbformat.read(PROJECT_ROOT / "notebooks" / name, as_version=4)
         assert not any(c.get("outputs") for c in nb.cells if c.cell_type == "code"), "commit notebooks without outputs"
@@ -211,12 +213,27 @@ def test_results_notebook_runs_on_synthetic(run_notebook):
     assert len(list((tmp / "figures").glob("res_*_synthetic.png"))) == 9
 
 
-def test_results_notebook_skips_missing_results(monkeypatch, tmp_path):
+@pytest.mark.parametrize("name, expected", [
+    ("03_results_comparison.ipynb", "[missing] rq1_model_comparison_synthetic"),
+    ("04_explainability_errors.ipynb", "No RQ5 results yet"),
+])
+def test_results_notebooks_skip_missing_results(monkeypatch, tmp_path, name, expected):
     nbformat = pytest.importorskip("nbformat")
     nbclient = pytest.importorskip("nbclient")
     _env(monkeypatch, tmp_path)
-    nb = nbformat.read(PROJECT_ROOT / "notebooks" / "03_results_comparison.ipynb", as_version=4)
+    nb = nbformat.read(PROJECT_ROOT / "notebooks" / name, as_version=4)
     nbclient.NotebookClient(nb, timeout=120, kernel_name="python3",
                             resources={"metadata": {"path": str(PROJECT_ROOT / "notebooks")}}).execute()
     text = "".join(o.get("text", "") for c in nb.cells if c.cell_type == "code" for o in c.get("outputs", []))
-    assert "[missing] rq1_model_comparison_synthetic" in text
+    assert expected in text
+
+
+def test_explain_notebook_runs_on_synthetic(run_notebook):
+    tmp = run_notebook("03_results_comparison.ipynb")   # writes the scoreboard that 04 completes
+    tmp = run_notebook("04_explainability_errors.ipynb")
+    summary = json.loads((tmp / "tables" / "rq5_explain_summary_synthetic.json").read_text())
+    assert summary["H5"]["verdict"] in {"supported", "partly supported", "not supported"}
+    assert summary["buyers_missed_by_all"]["of"] > 0
+    assert len(list((tmp / "figures").glob("xai_*_synthetic.png"))) == 7
+    board = (tmp / "tables" / "hypothesis_scoreboard_synthetic.csv").read_text()
+    assert "see notebook 04" not in board
