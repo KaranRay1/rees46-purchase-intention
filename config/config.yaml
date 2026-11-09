@@ -112,16 +112,18 @@ features:
       - unique_products_count
       - session_duration_sec
       - max_gap_sec             # longest pause between prefix events (mean gap = duration/(K-1), redundant)
+    # remove_count and remove_to_cart_ratio are NOT used: the REES46 multi-category
+    # store data has no remove_from_cart events (only view / cart / purchase), so
+    # both would be 0 for every session. build_features.py still computes them, so
+    # adding them back here re-enables them for a dataset that has removals.
     G2_cart_signals:            # funnel counts + cart behaviour
       - view_count
       - cart_count
-      - remove_count
       - has_cart
       - first_cart_position     # 1..K, or K+1 if no cart in the prefix
       - last_event_type
     G3_behavioural_ratios:
       - cart_to_view_ratio      # cart_count   / (view_count + eps)
-      - remove_to_cart_ratio    # remove_count / (cart_count + eps)
     G4_category_hierarchy:
       - unique_categories_count
       - unique_brands_count
@@ -166,7 +168,6 @@ preprocessing:
     - session_duration_sec
     - max_gap_sec
     - cart_to_view_ratio        # can reach count/epsilon when the denominator is 0
-    - remove_to_cart_ratio
     - price_mean
     - price_max
     - price_sum

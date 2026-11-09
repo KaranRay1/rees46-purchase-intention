@@ -70,13 +70,19 @@ docs/                     research blueprint, proposals analysis, literature rev
 | Group | Features |
 |---|---|
 | G1 activity | unique_products_count, session_duration_sec, max_gap_sec |
-| G2 cart signals | view_count, cart_count, remove_count, has_cart, first_cart_position, last_event_type |
-| G3 behavioural ratios | cart_to_view_ratio, remove_to_cart_ratio |
+| G2 cart signals | view_count, cart_count, has_cart, first_cart_position, last_event_type |
+| G3 behavioural ratios | cart_to_view_ratio |
 | G4 category hierarchy | unique_categories_count, unique_brands_count, main_category |
 | G5 price & time | price_mean, price_max, price_sum, price_std, hour_of_day, day_of_week |
 
 `view_count` belongs to G2: with K fixed, view = K − cart − remove, so it carries
 the cart signal.
+
+The REES46 multi-category data has **no `remove_from_cart` events** (only view, cart and
+purchase), so the proposal's `remove_count` and `remove_to_cart_ratio` would be 0 for every
+session. They are left out, giving 18 features. `build_features.py` still computes them, so
+listing them in `config.yaml → features.groups` (and `preprocessing.log1p_features`) switches
+them back on for a dataset with removals.
 
 ---
 

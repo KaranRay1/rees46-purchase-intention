@@ -18,8 +18,8 @@ the **share of mean |attribution|** per feature (each model's importances sum
 to 1) and **rank correlation** — both scale-free.
 
 One-hot columns (``main_category=electronics`` …) are summed back to their
-source feature (``main_category``) so every model is compared on the same 20
-features, and ``aggregate_groups`` sums features into the G1–G5 groups, so
+source feature (``main_category``) so every model is compared on the same
+configured features, and ``aggregate_groups`` sums features into the G1–G5 groups, so
 correlated features (e.g. view_count vs cart_count) are judged as one block.
 (Summing is exact for additive SHAP values.)
 
@@ -28,7 +28,7 @@ Error analysis
 Test sessions are grouped into TP / FP / FN / TN at the model's tuned
 threshold; ``shap_by_error_group`` gives the mean signed attribution per
 feature in each group (e.g. "false positives have high cart_count SHAP but
-also high remove_to_cart_ratio") and ``pick_examples`` selects the most
+low first_cart_position SHAP") and ``pick_examples`` selects the most
 confident session of each group for waterfall plots.
 """
 

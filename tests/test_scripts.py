@@ -88,6 +88,10 @@ def test_build_features_detects_broken_table():
     assert any("duplicate" in p for p in problems)
     assert any("analysis-only" in p for p in problems)
     assert any("!= K" in p for p in problems)
+    # Without remove_count (the default config) the counts may not exceed K.
+    del row["remove_count"]
+    row.update({"view_count": 4, "cart_count": 3})
+    assert any("> K" in p for p in mod.check_table(pl.DataFrame([row]), cfg, k=5))
 
 
 FAST = [

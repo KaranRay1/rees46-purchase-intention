@@ -55,8 +55,14 @@ def check_table(table: pl.DataFrame, cfg: dict, k: int) -> list[str]:
     leaked = set(table.columns) & (set(ANALYSIS_ONLY_COLUMNS) - {TARGET})
     if leaked:
         problems.append(f"analysis-only columns present: {sorted(leaked)}")
-    if not (table["view_count"] + table["cart_count"] + table["remove_count"] == k).all():
-        problems.append("view + cart + remove != K for some sessions")
+    # Purchases inside the prefix were dropped, so the counted events must add up to K
+    # (exactly when remove_count is a feature; at most K when it is not).
+    counted = table["view_count"] + table["cart_count"]
+    if "remove_count" in table.columns:
+        if not (counted + table["remove_count"] == k).all():
+            problems.append("view + cart + remove != K for some sessions")
+    elif not (counted <= k).all():
+        problems.append("view + cart > K for some sessions")
     return problems
 
 

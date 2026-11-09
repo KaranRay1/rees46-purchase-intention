@@ -8,10 +8,14 @@ the features are computed, so no future information can enter a feature.
 Feature groups (names must match ``config.yaml → features.groups``)
 --------------------------------------------------------------------
 G1 activity          unique_products_count, session_duration_sec, max_gap_sec
-G2 cart signals      view_count, cart_count, remove_count, has_cart, first_cart_position, last_event_type
+G2 cart signals      view_count, cart_count, has_cart, first_cart_position, last_event_type
                      (view_count is here, not in G1: with K fixed, view = K − cart − remove,
                      so it carries cart information; G1 stays cart-free for the ablation)
-G3 behavioural ratios cart_to_view_ratio, remove_to_cart_ratio          (ε from config)
+G3 behavioural ratios cart_to_view_ratio                                 (ε from config)
+
+``remove_count`` and ``remove_to_cart_ratio`` are always computed but only output
+when listed in ``features.groups``. They are off by default: the REES46
+multi-category data has no ``remove_from_cart`` events, so both would be 0.
 G4 category hierarchy unique_categories_count, unique_brands_count, main_category
 G5 price & time      price_mean, price_max, price_sum, price_std, hour_of_day, day_of_week
 

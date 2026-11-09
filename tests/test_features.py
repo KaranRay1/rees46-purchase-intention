@@ -19,6 +19,13 @@ from src.features.build_features import (
 T0 = datetime(2019, 10, 1, 12, tzinfo=timezone.utc)  # a Tuesday
 CFG = load_config()
 EPS = CFG["features"]["epsilon"]
+# The default config leaves out the remove features (REES46 multi-category data has no
+# remove_from_cart events); this one adds them back to test that they are still computed right.
+_G = CFG["features"]["groups"]
+CFG_REMOVE = load_config(overrides={
+    "features.groups.G2_cart_signals": [*_G["G2_cart_signals"], "remove_count"],
+    "features.groups.G3_behavioural_ratios": [*_G["G3_behavioural_ratios"], "remove_to_cart_ratio"],
+})
 
 # (seconds, event_type, product, category_id, category_code, brand, price)
 SESSIONS = {
@@ -52,7 +59,7 @@ def _prefix(spec=SESSIONS, k=5):
 
 @pytest.fixture(scope="module")
 def feats():
-    df = build_features(_prefix(), 5, CFG).collect()
+    df = build_features(_prefix(), 5, CFG_REMOVE).collect()
     return {r["user_session"]: r for r in df.iter_rows(named=True)}
 
 
@@ -60,6 +67,11 @@ def test_columns_are_config_features_in_order():
     df = build_features(_prefix(), 5, CFG).collect()
     assert df.columns == ["user_session", *feature_list(CFG)]
     assert df.null_count().sum_horizontal().item() == 0
+
+
+def test_remove_features_off_by_default():
+    assert not {"remove_count", "remove_to_cart_ratio"} & set(feature_list(CFG))
+    assert {"remove_count", "remove_to_cart_ratio"} <= set(feature_list(CFG_REMOVE))
 
 
 def test_session_a_exact_values(feats):
@@ -121,5 +133,5 @@ def test_run_on_synthetic(tmp_path):
         n_split = split.load_split_sessions(cfg, k).select(pl.len()).collect().item()
         assert table.height == n_split
         assert table.select(feature_list(cfg)).null_count().sum_horizontal().item() == 0
-        assert (table["view_count"] + table["cart_count"] + table["remove_count"] == k).all()
+        assert (table["view_count"] + table["cart_count"] <= k).all()   # synthetic data has removals
     assert load_feature_table(cfg, 5, "test")["split"].cast(pl.String).unique().to_list() == ["test"]

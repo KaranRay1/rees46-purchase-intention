@@ -73,8 +73,8 @@ def test_named_importances_favour_cart_signals(built, raw, name):
     assert set(imp) == set(pre.output_columns)
     top = sorted(imp, key=imp.get, reverse=True)[:5]
     # view_count counts as cart information: with K fixed, view = K - cart - remove.
-    cart = {"view_count", "cart_count", "remove_count", "has_cart", "first_cart_position",
-            "cart_to_view_ratio", "remove_to_cart_ratio", "last_event_type"}
+    cart = {"view_count", "cart_count", "has_cart", "first_cart_position",
+            "cart_to_view_ratio", "last_event_type"}
     assert cart & set(top)                     # synthetic signal lives in cart behaviour
 
 

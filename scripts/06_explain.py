@@ -56,7 +56,7 @@ from src.utils.results_logger import start_run  # noqa: E402
 SOURCE = "rq1_models"
 EXPERIMENT = "rq5_explain"
 CART_GROUP = "G2_cart_signals"
-PROFILE_FEATURES = ["has_cart", "first_cart_position", "cart_count", "remove_count",
+PROFILE_FEATURES = ["has_cart", "first_cart_position", "cart_count",
                     "unique_products_count", "unique_categories_count", "hour_of_day"]
 
 

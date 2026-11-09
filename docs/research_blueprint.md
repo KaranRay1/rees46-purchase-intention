@@ -44,7 +44,7 @@ improve on tabular machine learning for this task?
 - H1b: MLP / TabNet > LR baseline on F1 and PR-AUC (Karan H1).
 - H1c (exploratory): GRU over the raw event sequence ≥ best aggregated-feature model at K = 10.
 - H2: performance rises with K, with diminishing gains from 5 → 10.
-- H3: adding behavioural ratios gives a significant PR-AUC gain over counts only.
+- H3: adding the behavioural ratio (cart/view) gives a significant PR-AUC gain over counts only.
 - H4: tree models dominate the accuracy–latency Pareto front on CPU.
 - H5: cart-related features (group G2) rank highest in SHAP across all model families (TabNet: attention shares).
 
@@ -81,14 +81,23 @@ Imbalance: class weights in training + decision threshold tuned on validation (m
 | Group | Adds |
 |-------|------|
 | G1 activity | unique products, duration, longest inter-event gap (no cart information) |
-| G2 + cart signals | view_count, cart_count, remove_count, has_cart, position of first cart, last event type |
+| G2 + cart signals | view_count, cart_count, has_cart, position of first cart, last event type |
+| G3 + behavioural ratios | cart/view (ε = 1e-6) |
+| G4 + category hierarchy | top-level category of most-viewed item, unique categories & brands |
+| G5 + price & time context | price mean/max/sum/std, hour, weekday |
 
 `view_count` belongs to G2, not G1: with exactly K events, view = K − cart − remove, so it
 already encodes cart behaviour. Keeping it out of G1 makes each ablation step add information
 the earlier steps could not infer (a refinement of the proposal's "past activity" group).
-| G3 + behavioural ratios | cart/view, remove/cart (ε = 1e-6) |
-| G4 + category hierarchy | top-level / sub category of most-viewed item, unique categories & brands |
-| G5 + price & time context | price mean/max/sum/std, hour, weekday |
+
+**No remove events.** The REES46 multi-category store data contains only `view`, `cart` and
+`purchase` events (checked on every month, Oct 2019 – Apr 2020), so the proposal's
+`remove_count` and remove/cart ratio would be 0 for every session. Both are dropped from
+the feature set (18 features). The pipeline still computes them, so they can be switched
+back on in `config.yaml` for a dataset that records removals. As a result G3 is a single
+ratio and, with K fixed, view = K − cart, so cart/view is a function of `cart_count`; H3
+therefore tests whether that re-expression helps, and the exploratory variant (G1+G3 vs
+G1+G2) whether it can replace the cart block.
 
 ## 6. Evaluation
 
