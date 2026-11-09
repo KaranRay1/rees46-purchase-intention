@@ -82,6 +82,34 @@ def ensure_prepared(cfg: Mapping[str, Any]) -> None:
     )
 
 
+def features_status(cfg: Mapping[str, Any]) -> dict[int, bool]:
+    """For each K, whether ``features.parquet`` exists and is newer than the split it was built from."""
+    out: dict[int, bool] = {}
+    for k in cfg["sessionize"]["prefix_k"]:
+        d = processed_dir_for_k(cfg, k)
+        feats, splits = d / "features.parquet", d / "splits.parquet"
+        out[k] = feats.exists() and splits.exists() and feats.stat().st_mtime >= splits.stat().st_mtime
+    return out
+
+
+def ensure_features(cfg: Mapping[str, Any]) -> None:
+    """Like ``ensure_prepared``, for step 2 (feature tables)."""
+    ensure_prepared(cfg)
+    if all(features_status(cfg).values()):
+        return
+    mode = cfg["data"]["mode"]
+    if mode == "synthetic":
+        from src.features import build_features
+
+        build_features.run(cfg)
+        return
+    stale = [k for k, ok in features_status(cfg).items() if not ok]
+    raise RuntimeError(
+        f"Feature tables for K={stale} are missing or older than the data split. "
+        f"Run `python scripts/02_build_features.py --mode {mode}` first."
+    )
+
+
 def use_style() -> None:
     """Quiet, report-ready matplotlib defaults: recessive axes and grid, fixed colour order."""
     plt.rcParams.update({
