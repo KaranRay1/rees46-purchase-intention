@@ -1,0 +1,109 @@
+{
+  "mode": "dev",
+  "k_explained": [
+    3,
+    5,
+    10
+  ],
+  "H5": {
+    "verdict": "partly supported",
+    "cart_group_top": "2/15"
+  },
+  "top_features": [
+    {
+      "feature": "price_std",
+      "mean_share": 0.2135275883161772
+    },
+    {
+      "feature": "hour_of_day",
+      "mean_share": 0.09846091084300727
+    },
+    {
+      "feature": "unique_categories_count",
+      "mean_share": 0.09243410350886394
+    },
+    {
+      "feature": "main_category",
+      "mean_share": 0.09034220676275082
+    },
+    {
+      "feature": "day_of_week",
+      "mean_share": 0.06509294038186236
+    }
+  ],
+  "mean_rank_agreement": [
+    {
+      "k": 3,
+      "level": "feature",
+      "mean_rho": 0.35783236734798224,
+      "min_rho": 0.0895029146716555
+    },
+    {
+      "k": 3,
+      "level": "group",
+      "mean_rho": 0.6199999999999999,
+      "min_rho": 0.0
+    },
+    {
+      "k": 5,
+      "level": "feature",
+      "mean_rho": 0.3553573865569363,
+      "min_rho": -0.2094444944872977
+    },
+    {
+      "k": 5,
+      "level": "group",
+      "mean_rho": 0.7199999999999999,
+      "min_rho": 0.19999999999999998
+    },
+    {
+      "k": 10,
+      "level": "feature",
+      "mean_rho": 0.40871208650997265,
+      "min_rho": 0.11776859504132232
+    },
+    {
+      "k": 10,
+      "level": "group",
+      "mean_rho": 0.7,
+      "min_rho": 0.3
+    }
+  ],
+  "focus_model": "lightgbm",
+  "buyers_missed_by_all": {
+    "n": 17570,
+    "of": 24440
+  },
+  "missed_by_all_profile": [
+    {
+      "status": "buyer caught by \u22651",
+      "sessions": 6870,
+      "has_cart": 0.8330422125181951,
+      "cart_count": 1.3620087336244542,
+      "first_cart_position": 3.888646288209607,
+      "distinct_products": 1.8681222707423581,
+      "median_duration_sec": 173.0,
+      "last_event_cart": 0.5524017467248908
+    },
+    {
+      "status": "buyer missed by all",
+      "sessions": 17570,
+      "has_cart": 0.0,
+      "cart_count": 0.0,
+      "first_cart_position": 6.0,
+      "distinct_products": 3.4218554354012523,
+      "median_duration_sec": 191.0,
+      "last_event_cart": 0.0
+    },
+    {
+      "status": "non-buyer",
+      "sessions": 285216,
+      "has_cart": 0.02586460787613598,
+      "cart_count": 0.036063895433636264,
+      "first_cart_position": 5.928292942892404,
+      "distinct_products": 3.5895076012565914,
+      "median_duration_sec": 194.0,
+      "last_event_cart": 0.0095366318860092
+    }
+  ]
+}

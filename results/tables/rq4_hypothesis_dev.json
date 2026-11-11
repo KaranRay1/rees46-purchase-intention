@@ -1,0 +1,78 @@
+{
+  "realtime_budget_ms_p95_single_session": 10.0,
+  "n_threads": 1,
+  "per_k": {
+    "3": {
+      "within_budget": [
+        "rule_based",
+        "logistic_regression",
+        "random_forest",
+        "lightgbm",
+        "mlp",
+        "tabnet",
+        "gru"
+      ],
+      "over_budget": [],
+      "pareto_front_all_models": [
+        "rule_based",
+        "logistic_regression",
+        "lightgbm",
+        "mlp"
+      ],
+      "pareto_front_non_baseline": [
+        "lightgbm",
+        "mlp"
+      ],
+      "trees_dominate": false
+    },
+    "5": {
+      "within_budget": [
+        "rule_based",
+        "logistic_regression",
+        "random_forest",
+        "lightgbm",
+        "mlp",
+        "tabnet",
+        "gru"
+      ],
+      "over_budget": [],
+      "pareto_front_all_models": [
+        "rule_based",
+        "logistic_regression",
+        "lightgbm",
+        "mlp"
+      ],
+      "pareto_front_non_baseline": [
+        "lightgbm",
+        "mlp"
+      ],
+      "trees_dominate": false
+    },
+    "10": {
+      "within_budget": [
+        "rule_based",
+        "logistic_regression",
+        "random_forest",
+        "lightgbm",
+        "mlp",
+        "tabnet",
+        "gru"
+      ],
+      "over_budget": [],
+      "pareto_front_all_models": [
+        "rule_based",
+        "logistic_regression",
+        "mlp"
+      ],
+      "pareto_front_non_baseline": [
+        "mlp"
+      ],
+      "trees_dominate": false
+    }
+  },
+  "H4_trees_dominate_accuracy_latency_front": {
+    "verdict": "not supported",
+    "k_where_trees_dominate": "0/3",
+    "rule": "at each K, every Pareto-optimal non-baseline model (PR-AUC vs p95 single-session latency) is a tree model"
+  }
+}

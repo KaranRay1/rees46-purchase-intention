@@ -1,0 +1,15 @@
+{
+  "platform": "macOS-27.0.1-arm64-arm-64bit",
+  "machine": "arm64",
+  "processor": "arm",
+  "cpu_physical": 15,
+  "cpu_logical": 15,
+  "ram_gb": 25.8,
+  "python": "3.12.10",
+  "numpy_version": "2.5.4",
+  "polars_version": "2.1.0",
+  "sklearn_version": "1.9.1",
+  "lightgbm_version": "4.7.0",
+  "torch_version": "2.15.0",
+  "pytorch_tabnet_version": "unknown"
+}
