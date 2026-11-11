@@ -57,8 +57,10 @@ src/
   evaluation/             metrics, statistics (bootstrap, McNemar, Holm), efficiency (latency)
   explainability/         SHAP / TabNet attention, group aggregation, error groups
   utils/                  results_logger (replaces MLflow), notebook helpers
+  serving/                predictor (score a live session with the saved models), results reader
 scripts/                  01–06 run the study, in order (see below)
 notebooks/                01–04 present the results
+app/                      Streamlit dashboard: results pages + live predictor
 tests/                    pytest suite (synthetic data, temporary folders)
 data/                     raw/ (you add the CSVs), interim/, processed/k{3,5,10}/   — git-ignored
 results/                  runs/ (one folder per run, git-ignored), tables/, figures/
@@ -220,6 +222,34 @@ Run notebook 03 before 04: notebook 04 fills the H5 row of the scoreboard that n
   before committing.
 
 ---
+
+## Dashboard
+
+An interactive front end for presenting the study. It reads what scripts 01–06 wrote and
+loads the saved models, so run the study first (at least steps 01–03 for one mode).
+
+```bash
+streamlit run app/main.py
+```
+
+Then open <http://localhost:8501>. The sidebar picks the data mode (every mode with results
+in `results/tables/` is listed) and the prefix length K. It has these pages:
+
+| Page | Shows |
+|---|---|
+| Overview | Headline numbers, the hypothesis scoreboard, the pipeline |
+| Data & pipeline | Cleaning, eligibility per K, the chronological split, EDA figures |
+| RQ1–2 · Models & K | PR-AUC with CIs, lift vs K, pairwise significance heatmap |
+| RQ3 · Features | Ablation ladder, step gains, ratios-instead-of-counts variant |
+| RQ4 · Real-time cost | Accuracy vs latency (Pareto front), throughput, cost sheet |
+| RQ5 · Explainability | Attribution by feature group, model agreement, missed buyers |
+| Live predictor | Build a session (or replay a real test session) and score it with every model |
+
+The live predictor uses `src/serving/predictor.py`: raw events → the same feature code as
+training → each model's saved preprocessor → score and validation-tuned threshold, plus
+LightGBM TreeSHAP contributions. It does not depend on Streamlit, so a later phase can put
+the same `SessionPredictor` behind an HTTP API, or score larger (`full`) runs, without
+changes. Replaying real sessions needs `data/processed/` to hold the selected mode.
 
 ## Where results go
 

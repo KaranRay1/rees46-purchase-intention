@@ -1,0 +1,29 @@
+# Dashboard theme (app/). Light and dark follow the viewer's setting (menu ▸ Settings ▸ Theme).
+[server]
+headless = true
+runOnSave = false
+
+[browser]
+gatherUsageStats = false
+
+[client]
+toolbarMode = "minimal"
+
+[theme]
+font = "sans-serif"
+baseRadius = "0.6rem"
+showSidebarBorder = true
+
+[theme.light]
+primaryColor = "#2a78d6"
+backgroundColor = "#fcfcfb"
+secondaryBackgroundColor = "#f3f2ef"
+textColor = "#0b0b0b"
+borderColor = "#e4e3df"
+
+[theme.dark]
+primaryColor = "#3987e5"
+backgroundColor = "#1a1a19"
+secondaryBackgroundColor = "#242422"
+textColor = "#f0efec"
+borderColor = "#383835"

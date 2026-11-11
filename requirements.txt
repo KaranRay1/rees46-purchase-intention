@@ -36,6 +36,10 @@ psutil>=5.9
 matplotlib>=3.8
 seaborn>=0.13
 
+# --- Dashboard (app/) ----------------------------------------------------------
+streamlit>=1.46
+plotly>=5.20
+
 # --- Notebooks, progress bars, tests ------------------------------------------
 jupyterlab>=4.0
 ipykernel>=6.29
