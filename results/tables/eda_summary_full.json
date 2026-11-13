@@ -1,0 +1,219 @@
+{
+  "mode": "full",
+  "cleaning": {
+    "rows_in": 411709736,
+    "rows_out": 40111556,
+    "sessions_in": 89693595,
+    "sessions_out": 8871684
+  },
+  "overview": {
+    "events": 40111556,
+    "sessions": 8871684,
+    "users": 4592273,
+    "products": 319295,
+    "categories": 1305,
+    "brands": 6067,
+    "first_event": "2019-10-01 00:00:17+00:00",
+    "last_event": "2020-04-30 23:59:59+00:00"
+  },
+  "event_share": {
+    "view": 0.9410944566697936,
+    "cart": 0.042798987902638336,
+    "purchase": 0.016106555427568055
+  },
+  "sessions": {
+    "n": 8871684,
+    "median_events": 2.0,
+    "single_event_share": 0.4102939193956863,
+    "purchase_session_share": 0.05941611536208909,
+    "cart_session_share": 0.11625290080214759
+  },
+  "share_longer_than_k": {
+    "3": 0.34292125373266225,
+    "5": 0.22376709991023125,
+    "10": 0.09972796596452263
+  },
+  "purchase_rate_given_cart": 0.45961299605665923,
+  "purchase_rate_given_no_cart": 0.0067720406998434375,
+  "first_purchase_pos_median": 4.0,
+  "buyers_with_cart_first": 0.9959749043301422,
+  "eligibility": {
+    "3": {
+      "k": 3,
+      "sessions_total": 8871684,
+      "too_short": 5829395,
+      "purchase_within_prefix": 121526,
+      "eligible": 2920763,
+      "positives": 306389,
+      "positive_rate": 0.1049003291263276,
+      "eligible_share": 0.3292230652038553,
+      "imbalance": 8.532858555626998
+    },
+    "5": {
+      "k": 5,
+      "sessions_total": 8871684,
+      "too_short": 6886493,
+      "purchase_within_prefix": 89476,
+      "eligible": 1895715,
+      "positives": 182700,
+      "positive_rate": 0.09637524627910841,
+      "eligible_share": 0.213681528783036,
+      "imbalance": 9.376108374384236
+    },
+    "10": {
+      "k": 10,
+      "sessions_total": 8871684,
+      "too_short": 7986929,
+      "purchase_within_prefix": 46520,
+      "eligible": 838235,
+      "positives": 73134,
+      "positive_rate": 0.08724760956056477,
+      "eligible_share": 0.09448431661903196,
+      "imbalance": 10.461632072633796
+    }
+  },
+  "test_sessions_with_train_user": 0.21247103790018435,
+  "missing_share": {
+    "missing_category": 0.15815671673270415,
+    "missing_brand": 0.13413867564748672
+  },
+  "splits": [
+    {
+      "K": 3,
+      "split": "train",
+      "sessions": 2044496,
+      "fraction": 0.7000485532301595,
+      "positive_rate": 0.09944406836697162
+    },
+    {
+      "K": 3,
+      "split": "val",
+      "sessions": 437895,
+      "fraction": 0.14993805867887278,
+      "positive_rate": 0.12919763870334214
+    },
+    {
+      "K": 3,
+      "split": "test",
+      "sessions": 438115,
+      "fraction": 0.1500133880909678,
+      "positive_rate": 0.10605206395581068
+    },
+    {
+      "K": 5,
+      "split": "train",
+      "sessions": 1315346,
+      "fraction": 0.6939294245752053,
+      "positive_rate": 0.09025990119709947
+    },
+    {
+      "K": 5,
+      "split": "val",
+      "sessions": 284513,
+      "fraction": 0.15009886552600257,
+      "positive_rate": 0.11913691114290033
+    },
+    {
+      "K": 5,
+      "split": "test",
+      "sessions": 295645,
+      "fraction": 0.15597170989879208,
+      "positive_rate": 0.10162864245970674
+    },
+    {
+      "K": 10,
+      "split": "train",
+      "sessions": 573638,
+      "fraction": 0.6844480928955033,
+      "positive_rate": 0.08023527032727958
+    },
+    {
+      "K": 10,
+      "split": "val",
+      "sessions": 126458,
+      "fraction": 0.15088598895362504,
+      "positive_rate": 0.10760094260545003
+    },
+    {
+      "K": 10,
+      "split": "test",
+      "sessions": 138007,
+      "fraction": 0.16466591815087167,
+      "positive_rate": 0.09766171281166898
+    }
+  ],
+  "cart_signal": [
+    {
+      "carts_in_prefix": "0",
+      "sessions": 2611256,
+      "purchase_rate": 0.06380492759040095,
+      "K": 3
+    },
+    {
+      "carts_in_prefix": "1",
+      "sessions": 267087,
+      "purchase_rate": 0.4288115857379805,
+      "K": 3
+    },
+    {
+      "carts_in_prefix": "2",
+      "sessions": 41847,
+      "purchase_rate": 0.5999235309580138,
+      "K": 3
+    },
+    {
+      "carts_in_prefix": "3+",
+      "sessions": 316,
+      "purchase_rate": 0.3322784810126582,
+      "K": 3
+    },
+    {
+      "carts_in_prefix": "0",
+      "sessions": 1664933,
+      "purchase_rate": 0.05844079010987229,
+      "K": 5
+    },
+    {
+      "carts_in_prefix": "1",
+      "sessions": 150034,
+      "purchase_rate": 0.306443872722183,
+      "K": 5
+    },
+    {
+      "carts_in_prefix": "2",
+      "sessions": 62147,
+      "purchase_rate": 0.4718650940512012,
+      "K": 5
+    },
+    {
+      "carts_in_prefix": "3+",
+      "sessions": 18390,
+      "purchase_rate": 0.5471995649809679,
+      "K": 5
+    },
+    {
+      "carts_in_prefix": "0",
+      "sessions": 723286,
+      "purchase_rate": 0.057053503040291116,
+      "K": 10
+    },
+    {
+      "carts_in_prefix": "1",
+      "sessions": 66422,
+      "purchase_rate": 0.22077022673210683,
+      "K": 10
+    },
+    {
+      "carts_in_prefix": "2",
+      "sessions": 25167,
+      "purchase_rate": 0.31604879405570785,
+      "K": 10
+    },
+    {
+      "carts_in_prefix": "3+",
+      "sessions": 23228,
+      "purchase_rate": 0.39723609436886514,
+      "K": 10
+    }
+  ]
+}

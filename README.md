@@ -138,6 +138,16 @@ Every script and notebook takes a mode. The files each mode uses are listed in
 | `dev` | `2019-Oct.csv` | development and first results |
 | `full` | Oct 2019 – Apr 2020 | final results for the report |
 
+The multi-month results in this repository were produced with a 10 % sample of whole
+sessions (about 40 M events, the size of one month) and the primary seed, so they run on a
+laptop in a few hours:
+
+```bash
+python scripts/01_prepare_data.py --mode full --set data.session_sample_fraction=0.1
+```
+
+Pass the same `--set` to scripts 02–06, and `--seeds 42` to scripts 03–04.
+
 ---
 
 ## Running the study
@@ -232,18 +242,19 @@ loads the saved models, so run the study first (at least steps 01–03 for one m
 streamlit run app/main.py
 ```
 
-Then open <http://localhost:8501>. The sidebar picks the data mode (every mode with results
-in `results/tables/` is listed) and the prefix length K. It has these pages:
+Then open <http://localhost:8501>. The sidebar picks the data (every mode with results in
+`results/tables/` is listed, multi-month first) and K, the number of clicks seen before
+predicting. The pages follow the project's story, research → analysis → product, and show
+only results that hold up statistically:
 
-| Page | Shows |
-|---|---|
-| Overview | Headline numbers, the hypothesis scoreboard, the pipeline |
-| Data & pipeline | Cleaning, eligibility per K, the chronological split, EDA figures |
-| RQ1–2 · Models & K | PR-AUC with CIs, lift vs K, pairwise significance heatmap |
-| RQ3 · Features | Ablation ladder, step gains, ratios-instead-of-counts variant |
-| RQ4 · Real-time cost | Accuracy vs latency (Pareto front), throughput, cost sheet |
-| RQ5 · Explainability | Attribution by feature group, model agreement, missed buyers |
-| Live predictor | Build a session (or replay a real test session) and score it with every model |
+| Section | Page | Shows |
+|---|---|---|
+| 1 · Research | Overview | The problem, the journey, who built what, the confirmed findings |
+| | The data | Months covered, visits and conversion per month, the time-ordered split |
+| 2 · Analysis | Machine learning · Merve | Rule, LR, random forest, LightGBM: accuracy, what they look at, what each feature group adds, speed |
+| | Deep learning · Karan | MLP, TabNet, GRU: the same four views |
+| | ML vs DL | Head-to-head with significance, accuracy vs speed, the model to ship, the shared limit |
+| 3 · Product | Live demo | Score a built or replayed visit: probability, intent level, suggested action, explanation, every model's opinion |
 
 The live predictor uses `src/serving/predictor.py`: raw events → the same feature code as
 training → each model's saved preprocessor → score and validation-tuned threshold, plus

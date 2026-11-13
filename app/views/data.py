@@ -1,94 +1,122 @@
-"""Data and pipeline: cleaning, eligibility per K, the chronological split, EDA figures."""
+"""The data: which months, how much, and how the fair (time-ordered) test is set up."""
+
+from datetime import datetime
 
 import plotly.graph_objects as go
+import polars as pl
 import streamlit as st
 
 import ui
+from src.serving.results import monthly_profile
 
 s = ui.store()
 summary = s.json("data_summary")
 
-ui.page_header("From 42 million clicks to a fair test",
-               "How raw REES46 events become leakage-safe session prefixes with a chronological split.")
+ui.page_header("The data",
+               "REES46: the public click log of a large multi-category online shop. Every view, add-to-cart and "
+               "purchase, with time, product, category, brand and price.", rq="1 · Research")
 if summary is None:
     ui.missing("data summary", "01_prepare_data.py")
     st.stop()
 
 ink = ui.INK[ui.theme()]
-clean = summary.get("cleaning")
-if not clean:
-    st.info("Cleaning counts are missing: step 01 ran with `--no-report`. Rerun it without that flag to show them.")
-    clean = {"rows_in": 0, "rows_out": 0, "sessions_out": 0, "purchase_sessions_out": 0, "sources": [], "removed": {}}
+pal = ui.SERIES[ui.theme()]
+clean = summary.get("cleaning") or {}
 
+
+@st.cache_data(show_spinner="Counting events per month…")
+def months(mode: str) -> pl.DataFrame | None:
+    return monthly_profile(ui._config(mode))
+
+
+mp = months(s.mode)
 c1, c2, c3, c4 = st.columns(4)
-c1.metric("Raw events", ui.fmt_int(clean["rows_in"]), ", ".join(clean["sources"]), delta_color="off")
-c2.metric("After cleaning", ui.fmt_int(clean["rows_out"]), f"−{clean['rows_in'] - clean['rows_out']:,} rows",
-          delta_color="off")
-c3.metric("Sessions", ui.fmt_int(clean["sessions_out"]), f"{clean['purchase_sessions_out']:,} with a purchase",
-          delta_color="off")
-cut = summary.get("split_cutoffs", {})
-c4.metric("Test period starts", cut.get("test_start", "")[:10], "chronological 70 / 15 / 15", delta_color="off")
+if mp is not None and mp.height:
+    first = datetime.strptime(mp["month"][0], "%Y-%m").strftime("%b %Y")
+    last = datetime.strptime(mp["month"][-1], "%Y-%m").strftime("%b %Y")
+    c1.metric("Months", f"{mp.height}", f"{first} – {last}" if mp.height > 1 else first, delta_color="off", delta_arrow="off")
+if clean:
+    c2.metric("Clicks (events)", ui.fmt_int(clean["rows_out"]), delta_color="off", delta_arrow="off")
+    c3.metric("Shop visits (sessions)", ui.fmt_int(clean["sessions_out"]), delta_color="off", delta_arrow="off")
+    c4.metric("Visits with a purchase", f"{clean['purchase_sessions_out'] / max(clean['sessions_out'], 1):.1%}",
+              f"{ui.fmt_int(clean['purchase_sessions_out'])} visits", delta_color="off", delta_arrow="off")
+    if clean.get("removed", {}).get("session_sampling"):
+        st.caption(f"A random {clean['sessions_out'] / max(clean['sessions_in'], 1):.0%} of all visits (whole visits, "
+                   "chosen by hash) keeps the multi-month run demo-sized; rates stay representative.")
 
-left, right = st.columns(2, gap="large")
-with left:
-    st.subheader("Rows removed in cleaning", anchor=False)
-    rem = {k.replace("_", " "): v for k, v in clean["removed"].items() if v}
-    items = sorted(rem.items(), key=lambda kv: kv[1]) or [("nothing removed", 0)]
-    fig = go.Figure(go.Bar(
-        y=[k for k, _ in items], x=[v for _, v in items], orientation="h",
-        marker=dict(color=ui.SERIES[ui.theme()][0], cornerradius=4),
-        text=[f"{v:,}" for _, v in items], textposition="outside", cliponaxis=False,
-        textfont=dict(color=ink["text"], size=11), hovertemplate="%{y}: %{x:,} rows<extra></extra>",
-    ))
-    ui.style(fig, height=300, legend=False, left=200)
-    fig.update_yaxes(showgrid=False)
-    fig.update_xaxes(title="Rows", range=[0, max(max(v for _, v in items), 1) * 1.25])
-    ui.show(fig, key="removed")
-    st.caption("The event log contains only view, cart and purchase events: no remove-from-cart, so removal "
-               "features were dropped.")
-
-with right:
-    st.subheader("Which sessions can be scored at K?", anchor=False)
-    sk = sorted(summary.get("sessionize", {}).items(), key=lambda kv: int(kv[0]))
-    parts = [("eligible", "Eligible", ui.SERIES[ui.theme()][0]),
-             ("purchase_within_prefix", "Bought within first K (excluded)", ui.SERIES[ui.theme()][1]),
-             ("too_short", "K events or fewer (excluded)", ink["grid"])]
-    fig = go.Figure()
-    for key, name, colour in parts:
-        fig.add_trace(go.Bar(
-            name=name, x=[f"K={k_}" for k_, _ in sk], y=[v[key] for _, v in sk],
-            marker=dict(color=colour, line=dict(color=ink["surface"], width=2)),
-            hovertemplate=f"{name}<br>%{{x}}: %{{y:,}} sessions<extra></extra>",
+# --------------------------------------------------------------------------- per month
+if mp is not None and mp.height:
+    labels = [datetime.strptime(m, "%Y-%m").strftime("%b %y") for m in mp["month"]]
+    left, right = st.columns(2, gap="large")
+    with left:
+        st.subheader("Visits per month", anchor=False)
+        fig = go.Figure(go.Bar(
+            x=labels, y=mp["sessions"], marker=dict(color=pal[0], cornerradius=4),
+            text=[ui.fmt_int(v) for v in mp["sessions"]], textposition="outside", cliponaxis=False,
+            textfont=dict(color=ink["text"], size=11),
+            hovertemplate="%{x}: %{y:,} visits<extra></extra>",
         ))
-    ui.style(fig, height=320, top=70, barmode="stack")
-    fig.update_yaxes(title="Sessions")
-    ui.show(fig, key="eligible")
-    st.caption("Target: a purchase after event K in the same session. Excluding sessions that already bought "
-               "inside the prefix prevents label leakage.")
+        ui.style(fig, height=300, legend=False)
+        fig.update_yaxes(title="Visits", range=[0, float(mp["sessions"].max()) * 1.2])
+        fig.update_xaxes(showgrid=False)
+        ui.show(fig, key="m_sessions")
+    with right:
+        st.subheader("Share of visits that buy", anchor=False)
+        fig = go.Figure(go.Scatter(
+            x=labels, y=mp["conversion"], mode="lines+markers+text", line=dict(color=pal[2], width=2),
+            marker=dict(size=9, line=dict(color=ink["surface"], width=2)),
+            text=[f"{v:.1%}" for v in mp["conversion"]], textposition="top center",
+            textfont=dict(color=ink["text"], size=11), hovertemplate="%{x}: %{y:.2%}<extra></extra>",
+        ))
+        ui.style(fig, height=300, legend=False)
+        fig.update_yaxes(title="Conversion", tickformat=".0%", range=[0, float(mp["conversion"].max()) * 1.35])
+        fig.update_xaxes(showgrid=False)
+        ui.show(fig, key="m_conv")
+    if mp.height > 1:
+        st.caption("Shopping behaviour shifts across the months (the holiday season, then early 2020), which makes "
+                   "the time-ordered test below a realistic check: the models are tested on months they never saw.")
 
-st.subheader("Chronological split", anchor=False)
-rows = []
-for k_, sp in sorted(summary.get("splits", {}).items(), key=lambda kv: int(kv[0])):
-    for part in ("train", "val", "test"):
-        p = sp[part]
-        rows.append({"K": int(k_), "Split": part, "Sessions": p["sessions"], "Buyer rate": p["positive_rate"],
-                     "From": p["first_start"][:16].replace("T", " "), "To": p["last_start"][:16].replace("T", " ")})
-    rows[-1]["Purged at cut-offs"] = sp.get("purged_boundary_sessions")
-st.dataframe(rows, hide_index=True, width="stretch", column_config={
-    "Sessions": st.column_config.NumberColumn(format="localized"),
-    "Buyer rate": st.column_config.NumberColumn(format="percent"),
-    "Purged at cut-offs": st.column_config.NumberColumn(format="localized"),
-})
-st.caption("Cut-offs are shared by every K; sessions that cross a cut-off are dropped so no session spans two splits.")
-
+# --------------------------------------------------------------------------- fair test
 st.divider()
-st.subheader("Exploratory figures", anchor=False)
-kind = st.segmented_control("Notebook", ["eda", "feat"], default="eda", key="fig_kind", required=True,
-                            format_func={"eda": "01 · EDA", "feat": "02 · Feature analysis"}.get)
-figs = s.figures(f"{kind}_")
-if not figs:
-    st.info("Run the notebooks to produce these figures (see README).")
-cols = st.columns(2)
-for i, p in enumerate(figs):
-    with cols[i % 2]:
-        st.image(str(p), caption=p.stem.replace(f"_{s.mode}", "").replace("_", " "), width="stretch")
+left, right = st.columns([1.4, 1], gap="large")
+with left:
+    st.subheader("A fair test: train on the past, test on the future", anchor=False)
+    sp = summary.get("splits", {}).get(str(ui.k()))
+    if sp:
+        fig = go.Figure()
+        names = {"train": "Train (70%)", "val": "Tune (15%)", "test": "Test (15%)"}
+        for i, part in enumerate(("train", "val", "test")):
+            p = sp[part]
+            a = datetime.fromisoformat(p["first_start"].replace("Z", "+00:00"))
+            b = datetime.fromisoformat(p["last_start"].replace("Z", "+00:00"))
+            fig.add_trace(go.Bar(
+                y=["split"], x=[(b - a).total_seconds() * 1000], base=[a], orientation="h", name=names[part],
+                marker=dict(color=[pal[0], pal[3], pal[1]][i], line=dict(color=ink["surface"], width=2)),
+                text=[part.replace("val", "tune").capitalize()], textposition="inside", insidetextanchor="middle",
+                textfont=dict(color="#ffffff", size=12),
+                hovertemplate=f"{names[part]}<br>{a:%d %b %Y} – {b:%d %b %Y}<br>{p['sessions']:,} visits · "
+                              f"{p['positive_rate']:.1%} buy<extra></extra>",
+            ))
+        ui.style(fig, height=170, legend=False, left=16, top=10, bottom=40, barmode="overlay")
+        fig.update_yaxes(visible=False)
+        fig.update_xaxes(type="date", showgrid=False)
+        ui.show(fig, key="split")
+        ui.legend_items((f"{names[x]}: {sp[x]['first_start'][:10]} → {sp[x]['last_start'][:10]}, "
+                         f"{sp[x]['sessions']:,} visits", c) for x, c in zip(("train", "val", "test"),
+                                                                             (pal[0], pal[3], pal[1])))
+    st.caption("Splitting by time, not at random, is how the engine would really be used: trained on what has "
+               "happened, judged on what happens next.")
+with right:
+    st.subheader("What the models see", anchor=False)
+    st.markdown(
+        "Each visit is cut after its first **K** clicks (3, 5 or 10). The question: *will this visit end in a "
+        "purchase?* Visits that already bought within those clicks are left out, so the answer is never "
+        "visible in the input.\n\n"
+        "From the K clicks we compute **18 features** in five groups: activity, cart behaviour, the cart/view "
+        "ratio, categories, and price & time. The GRU reads the raw clicks instead."
+    )
+    sk = sorted(summary.get("sessionize", {}).items(), key=lambda kv: int(kv[0]))
+    st.dataframe([{"K": int(k_), "Visits usable": v["eligible"], "Buy later": v["positive_rate"]} for k_, v in sk],
+                 hide_index=True, width="stretch",
+                 column_config={"Visits usable": st.column_config.NumberColumn(format="localized"),
+                                "Buy later": st.column_config.NumberColumn(format="percent")})

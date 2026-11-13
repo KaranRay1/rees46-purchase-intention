@@ -201,3 +201,58 @@ def legend_items(items: Iterable[tuple[str, str]]) -> None:
         f"<span style='opacity:.8'>{t}</span></span>" for t, c in items
     )
     st.markdown(f"<div style='font-size:.85rem'>{html}</div>", unsafe_allow_html=True)
+
+
+# --------------------------------------------------------------------------- teams, modes, plain words
+TEAMS = {
+    "ml": {
+        "title": "Machine learning", "author": "Merve Kara", "icon": ":material/account_tree:",
+        "models": ["rule_based", "logistic_regression", "random_forest", "lightgbm"],
+        "ablation_model": "lightgbm",
+        "pitch": "Classic models on 18 hand-built session features: fast, light and easy to explain.",
+    },
+    "dl": {
+        "title": "Deep learning", "author": "Karan Ray", "icon": ":material/neurology:",
+        "models": ["mlp", "tabnet", "gru"],
+        "ablation_model": "mlp",
+        "pitch": "Neural networks: two on the same features, one (GRU) reading the raw click sequence.",
+    },
+}
+MODEL_INFO = {
+    "rule_based": "Says “buyer” if the shopper added anything to the cart. The bar to beat.",
+    "logistic_regression": "A weighted sum of the features: the standard linear reference.",
+    "random_forest": "Hundreds of decision trees that vote.",
+    "lightgbm": "Gradient-boosted trees, each fixing the previous trees' mistakes.",
+    "mlp": "A feed-forward neural network on the same 18 features.",
+    "tabnet": "A neural network that picks which features to attend to at each step.",
+    "gru": "A recurrent network that reads the clicks one by one, in order.",
+}
+MODE_LABELS = {
+    "full": "Oct 2019 – Apr 2020 · 7 months",
+    "dev": "Oct 2019 · 1 month",
+    "synthetic": "Synthetic test data",
+}
+
+
+def team_of(model: str) -> str:
+    return next((t for t, v in TEAMS.items() if model in v["models"]), "ml")
+
+
+def team_colours() -> dict[str, str]:
+    pal = SERIES[theme()]
+    return {"ml": pal[0], "dl": pal[1]}
+
+
+def author_chip(team: str) -> None:
+    t, c = TEAMS[team], team_colours()[team]
+    st.markdown(
+        f"<span style='display:inline-flex;align-items:center;gap:.45rem;padding:.2rem .75rem;border-radius:999px;"
+        f"border:1px solid {c};font-size:.85rem;font-weight:600'><span style='width:9px;height:9px;border-radius:50%;"
+        f"background:{c};display:inline-block'></span>{t['title']} · built &amp; explained by {t['author']}</span>",
+        unsafe_allow_html=True,
+    )
+
+
+def card(title: str, body: str, kicker: str = "") -> str:
+    k_ = f"<div class='step'>{kicker}</div>" if kicker else ""
+    return f"<div class='card'>{k_}<h4>{title}</h4><p>{body}</p></div>"

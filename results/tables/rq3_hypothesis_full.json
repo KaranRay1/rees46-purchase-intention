@@ -1,0 +1,148 @@
+{
+  "H3_behavioural_ratios_add_pr_auc": {
+    "verdict": "not supported",
+    "significant_gains": "0/6",
+    "alpha": 0.05,
+    "comparison": "ladder step adding G3 vs the step before it; paired bootstrap on test PR-AUC, Holm-adjusted over the confirmatory family",
+    "evidence": [
+      {
+        "k": 3,
+        "model": "lightgbm",
+        "gain": 1.8984621033779625e-05,
+        "ci": [
+          -0.00018213754435794923,
+          0.00023072830149194058
+        ],
+        "p_holm": 1.0,
+        "significant_gain": false
+      },
+      {
+        "k": 3,
+        "model": "mlp",
+        "gain": -0.00023146918094624214,
+        "ci": [
+          -0.0005932486742311876,
+          0.00012878208747913296
+        ],
+        "p_holm": 0.618,
+        "significant_gain": false
+      },
+      {
+        "k": 5,
+        "model": "lightgbm",
+        "gain": -0.00013454824956277145,
+        "ci": [
+          -0.0005832226426961683,
+          0.0003095133184758262
+        ],
+        "p_holm": 1.0,
+        "significant_gain": false
+      },
+      {
+        "k": 5,
+        "model": "mlp",
+        "gain": -0.003689621160514578,
+        "ci": [
+          -0.004651238044801703,
+          -0.002720152540729844
+        ],
+        "p_holm": 0.0,
+        "significant_gain": false
+      },
+      {
+        "k": 10,
+        "model": "lightgbm",
+        "gain": -0.001715553568178485,
+        "ci": [
+          -0.0029063891440273895,
+          -0.0005482175157064606
+        ],
+        "p_holm": 0.01,
+        "significant_gain": false
+      },
+      {
+        "k": 10,
+        "model": "mlp",
+        "gain": -0.0011781510042815913,
+        "ci": [
+          -0.002247766476933323,
+          -0.00011269826318372077
+        ],
+        "p_holm": 0.136,
+        "significant_gain": false
+      }
+    ]
+  },
+  "exploratory_ratios_instead_of_counts": {
+    "question": "Can G1+G3 replace G1+G2? (variant vs ladder step 2)",
+    "summary": "variant significantly worse in 6/6 comparisons",
+    "evidence": [
+      {
+        "k": 3,
+        "model": "lightgbm",
+        "diff_vs_reference": -0.008970214894572892,
+        "ci": [
+          -0.00995381818069715,
+          -0.008018693286816498
+        ],
+        "p_holm": 0.0,
+        "outcome": "worse"
+      },
+      {
+        "k": 3,
+        "model": "mlp",
+        "diff_vs_reference": -0.008746845278515158,
+        "ci": [
+          -0.009763323889285823,
+          -0.007767829856853785
+        ],
+        "p_holm": 0.0,
+        "outcome": "worse"
+      },
+      {
+        "k": 5,
+        "model": "lightgbm",
+        "diff_vs_reference": -0.026773050626441364,
+        "ci": [
+          -0.028995240362405566,
+          -0.02467081254519222
+        ],
+        "p_holm": 0.0,
+        "outcome": "worse"
+      },
+      {
+        "k": 5,
+        "model": "mlp",
+        "diff_vs_reference": -0.026815899143337985,
+        "ci": [
+          -0.029184911095717133,
+          -0.02465535765699971
+        ],
+        "p_holm": 0.0,
+        "outcome": "worse"
+      },
+      {
+        "k": 10,
+        "model": "lightgbm",
+        "diff_vs_reference": -0.03541589022336758,
+        "ci": [
+          -0.039866911690531255,
+          -0.030875118959778868
+        ],
+        "p_holm": 0.0,
+        "outcome": "worse"
+      },
+      {
+        "k": 10,
+        "model": "mlp",
+        "diff_vs_reference": -0.032165723320368156,
+        "ci": [
+          -0.035709974264096195,
+          -0.0285635341622922
+        ],
+        "p_holm": 0.0,
+        "outcome": "worse"
+      }
+    ]
+  }
+}

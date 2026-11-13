@@ -63,3 +63,36 @@ class ResultStore:
     def figures(self, prefix: str) -> list[Path]:
         """Saved PNG figures ``<prefix>*_<mode>*.png``, sorted by name."""
         return sorted(p for p in self.figures_dir.glob(f"{prefix}*.png") if f"_{self.mode}" in p.name)
+
+
+def monthly_profile(cfg: Mapping[str, Any]) -> pl.DataFrame | None:
+    """Events, sessions and buying sessions per calendar month of the cleaned events.
+
+    Cached as ``monthly_profile_<mode>.csv`` next to the other tables; computed from
+    ``data/interim/events_<mode>.parquet`` on first use. ``None`` if neither exists.
+    """
+    from src.data.loader import cleaned_events_path
+
+    store = ResultStore(cfg)
+    cached = store.csv("monthly_profile")
+    if cached is not None:
+        return cached
+    src = cleaned_events_path(cfg)
+    if not src.exists():
+        return None
+    out = (
+        pl.scan_parquet(src)
+        .with_columns(month=pl.col("event_time").dt.strftime("%Y-%m"))
+        .group_by("month")
+        .agg(
+            events=pl.len(),
+            sessions=pl.col("user_session").n_unique(),
+            buying_sessions=pl.col("user_session").filter(pl.col("event_type") == "purchase").n_unique(),
+        )
+        .sort("month")
+        .collect(engine="streaming")
+        .with_columns(conversion=pl.col("buying_sessions") / pl.col("sessions"))
+    )
+    store.tables_dir.mkdir(parents=True, exist_ok=True)
+    out.write_csv(store.path("monthly_profile", "csv"))
+    return out

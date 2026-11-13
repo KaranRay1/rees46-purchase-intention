@@ -4,8 +4,8 @@ Run from the project root::
 
     streamlit run app/main.py
 
-The sidebar picks the data mode (``synthetic`` / ``dev`` / ``full``: whichever
-have results in ``results/tables``) and the prefix length K; every page reads
+The sidebar picks the data (``full`` = Oct 2019 – Apr 2020, ``dev`` = Oct 2019;
+whichever have results in ``results/tables``) and the prefix length K; every page reads
 the tables written by ``scripts/01``–``06`` for that mode, and the live
 predictor loads the models those runs saved. Nothing is retrained here.
 """
@@ -55,36 +55,39 @@ st.markdown(
 # --------------------------------------------------------------------------- sidebar
 tables_dir = resolve_path(load_config(), "tables_dir")
 modes = modes_with_results(tables_dir) or ["dev"]
+real = [m for m in modes if m != "synthetic"]
+modes = real or modes                                   # synthetic data only when nothing real exists
+done = [m for m in modes if (tables_dir / f"rq1_model_comparison_{m}.csv").exists()]
+modes = done + [m for m in modes if m not in done]      # modes with model results first (the default)
+if st.session_state.get("mode") not in modes:
+    st.session_state["mode"] = modes[0]
 with st.sidebar:
-    st.markdown("### :material/shopping_cart_checkout: Purchase intention")
-    st.caption("Session-based prediction on REES46 · tabular ML vs deep models")
-    mode_help = {"dev": "October 2019 (one month)", "full": "Oct 2019 – Apr 2020", "synthetic": "Generated test data"}
-    st.selectbox("Data", modes, key="mode", format_func=lambda m: f"{m} · {mode_help.get(m, m)}")
+    st.markdown("### :material/shopping_cart_checkout: Purchase Intent Engine")
+    st.caption("Will this shopper buy? Answered from the first few clicks, in milliseconds.")
+    st.selectbox("Data", modes, key="mode", format_func=lambda m: ui.MODE_LABELS.get(m, m))
     rq1 = ui.store().csv("rq1_model_comparison")
     ks = ui.available_ks(rq1) or list(ui.cfg()["sessionize"]["prefix_k"])
     if st.session_state.get("k") not in ks:
         st.session_state["k"] = 5 if 5 in ks else ks[0]
-    st.segmented_control("Prefix length K (events seen)", ks, key="k", required=True,
-                         help="Predictions are made after the first K events of a session.")
+    st.segmented_control("Clicks seen before predicting (K)", ks, key="k", required=True,
+                         help="The models decide after the first K events of a visit.")
 
 pages = {
-    "Study": [
-        st.Page("views/overview.py", title="Overview", icon=":material/dashboard:", default=True),
-        st.Page("views/data.py", title="Data & pipeline", icon=":material/database:"),
+    "1 · Research": [
+        st.Page("views/overview.py", title="Overview", icon=":material/home:", default=True),
+        st.Page("views/data.py", title="The data", icon=":material/database:"),
     ],
-    "Results": [
-        st.Page("views/models.py", title="RQ1–2 · Models & K", icon=":material/leaderboard:"),
-        st.Page("views/features.py", title="RQ3 · Features", icon=":material/stacked_bar_chart:"),
-        st.Page("views/efficiency.py", title="RQ4 · Real-time cost", icon=":material/speed:"),
-        st.Page("views/explain.py", title="RQ5 · Explainability", icon=":material/psychology:"),
+    "2 · Analysis": [
+        st.Page("views/ml.py", title="Machine learning · Merve", icon=":material/account_tree:"),
+        st.Page("views/dl.py", title="Deep learning · Karan", icon=":material/neurology:"),
+        st.Page("views/compare.py", title="ML vs DL", icon=":material/compare_arrows:"),
     ],
-    "Try it": [
-        st.Page("views/predict.py", title="Live predictor", icon=":material/bolt:"),
+    "3 · Product": [
+        st.Page("views/predict.py", title="Live demo", icon=":material/bolt:"),
     ],
 }
 nav = st.navigation(pages)
 with st.sidebar:
     st.divider()
-    st.caption(f"Results: `{tables_dir.relative_to(ROOT) if tables_dir.is_relative_to(ROOT) else tables_dir}`  \n"
-               "NCI MSc AI · Machine Learning")
+    st.caption("Karan Ray · Merve Kara  \nNCI MSc in AI · Machine Learning")
 nav.run()

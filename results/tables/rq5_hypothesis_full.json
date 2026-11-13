@@ -1,0 +1,114 @@
+{
+  "H5_cart_signals_rank_highest_for_every_family": {
+    "verdict": "partly supported",
+    "cart_group_top": "12/15",
+    "measure": "share of mean |attribution| summed over feature group G2 (exact for SHAP); TabNet uses attention shares",
+    "evidence": [
+      {
+        "k": 3,
+        "model": "logistic_regression",
+        "top_group": "G2_cart_signals",
+        "top_share": 0.4363062082669731,
+        "cart_group_share": 0.4363062082669731
+      },
+      {
+        "k": 3,
+        "model": "random_forest",
+        "top_group": "G2_cart_signals",
+        "top_share": 0.4970436276072487,
+        "cart_group_share": 0.4970436276072487
+      },
+      {
+        "k": 3,
+        "model": "lightgbm",
+        "top_group": "G2_cart_signals",
+        "top_share": 0.44451574466208804,
+        "cart_group_share": 0.44451574466208804
+      },
+      {
+        "k": 3,
+        "model": "mlp",
+        "top_group": "G2_cart_signals",
+        "top_share": 0.4265619453269712,
+        "cart_group_share": 0.4265619453269712
+      },
+      {
+        "k": 3,
+        "model": "tabnet",
+        "top_group": "G5_price_time",
+        "top_share": 0.4134235574936344,
+        "cart_group_share": 0.050800123854099107
+      },
+      {
+        "k": 5,
+        "model": "logistic_regression",
+        "top_group": "G2_cart_signals",
+        "top_share": 0.44347136156176026,
+        "cart_group_share": 0.44347136156176026
+      },
+      {
+        "k": 5,
+        "model": "random_forest",
+        "top_group": "G2_cart_signals",
+        "top_share": 0.4794898863564958,
+        "cart_group_share": 0.4794898863564958
+      },
+      {
+        "k": 5,
+        "model": "lightgbm",
+        "top_group": "G2_cart_signals",
+        "top_share": 0.4308153111990142,
+        "cart_group_share": 0.4308153111990142
+      },
+      {
+        "k": 5,
+        "model": "mlp",
+        "top_group": "G2_cart_signals",
+        "top_share": 0.4637197004945726,
+        "cart_group_share": 0.4637197004945726
+      },
+      {
+        "k": 5,
+        "model": "tabnet",
+        "top_group": "G5_price_time",
+        "top_share": 0.3973984657158337,
+        "cart_group_share": 0.2814274099351226
+      },
+      {
+        "k": 10,
+        "model": "logistic_regression",
+        "top_group": "G2_cart_signals",
+        "top_share": 0.38609940759853545,
+        "cart_group_share": 0.38609940759853545
+      },
+      {
+        "k": 10,
+        "model": "random_forest",
+        "top_group": "G2_cart_signals",
+        "top_share": 0.4107972713785749,
+        "cart_group_share": 0.4107972713785749
+      },
+      {
+        "k": 10,
+        "model": "lightgbm",
+        "top_group": "G2_cart_signals",
+        "top_share": 0.40903505130129597,
+        "cart_group_share": 0.40903505130129597
+      },
+      {
+        "k": 10,
+        "model": "mlp",
+        "top_group": "G2_cart_signals",
+        "top_share": 0.39923976108104264,
+        "cart_group_share": 0.39923976108104264
+      },
+      {
+        "k": 10,
+        "model": "tabnet",
+        "top_group": "G5_price_time",
+        "top_share": 0.43216572722050817,
+        "cart_group_share": 0.3453788621642043
+      }
+    ]
+  }
+}

@@ -1,4 +1,4 @@
-"""Live predictor: build a session (or replay a real test session) and score it with every saved model."""
+"""Live demo of the purchase-intent engine: clicks in, purchase probability and a next action out."""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ import plotly.graph_objects as go
 import polars as pl
 import streamlit as st
 
+import team_page
 import ui
 from src.config import processed_dir_for_k, resolve_path
 from src.serving.predictor import SessionPredictor, available_runs
@@ -16,11 +17,11 @@ from src.utils.notebook import prepared_data_status
 
 K, mode = ui.k(), st.session_state.get("mode", "dev")
 ink = ui.INK[ui.theme()]
-colours = ui.model_colours()
 
-ui.page_header("Score a session live",
-               f"Describe the first {K} events of a visit, or replay a real one from the test week. Every model "
-               "trained in step 03 scores it, using exactly the training feature pipeline.")
+ui.page_header("Try the engine",
+               f"This is how a shop would use it: send the first {K} clicks of a visit, get back a purchase "
+               "probability and a suggested action. Build a visit yourself or replay a real one from the test period.",
+               rq="3 · Product")
 
 
 @st.cache_resource(show_spinner="Loading the trained models…")
@@ -153,55 +154,57 @@ except ValueError as exc:
     st.error(str(exc))
     st.stop()
 
-st.divider()
-yes = [sc for sc in scores if sc.decision]
-learned = [sc for sc in scores if sc.model != "rule_based"]
-c1, c2, c3 = st.columns(3)
-c1.metric("Models predicting a purchase", f"{len(yes)} / {len(scores)}")
-best = next((sc for sc in scores if sc.model == "lightgbm"), learned[0] if learned else scores[0])
-c2.metric(f"{ui.label(best.model)} score", f"{best.score:.0%}", f"threshold {best.threshold:.0%}", delta_color="off")
-c3.metric("Slowest model, end to end", f"{max(sc.latency_ms for sc in scores):.1f} ms",
-          "feature transform + inference in this app", delta_color="off",
-          help="Includes Python-side preprocessing for a single session. Pure inference latency is benchmarked on the RQ4 page.")
+by_model = {sc.model: sc for sc in scores}
+engines = [m for m in by_model if m != "rule_based"] or list(by_model)
+rq1, eff = ui.store().csv("rq1_model_comparison"), ui.store().csv("rq4_efficiency")
+if rq1 is not None:
+    ship, _ = team_page.recommended(rq1, ui.store().csv("rq1_pairwise_tests"), eff, K)
+    if ship in engines:
+        engines.remove(ship)
+        engines.insert(0, ship)
 
+st.divider()
+head, pick = st.columns([3, 1.2])
+head.subheader("The engine's answer", anchor=False)
+engine = pick.selectbox("Engine model", engines, format_func=lambda m: ("★ " if m == engines[0] and rq1 is not None else "")
+                        + f"{ui.label(m)} · {ui.team_of(m).upper()}",
+                        help="★ = recommended: the fastest of the models statistically tied for the best accuracy.",
+                        key="engine")
+sc = by_model[engine]
+if sc.decision:
+    level, colour, action = ("High intent", ui.STATUS["good"],
+                             "Keep the path clear: express checkout, no discount needed.")
+elif sc.score >= sc.threshold / 2:
+    level, colour, action = ("Warm", ui.STATUS["warning"],
+                             "Give a nudge: free shipping, a low-stock note or a reminder of the cart.")
+else:
+    level, colour, action = ("Just browsing", ui.STATUS["serious"],
+                             "Don't spend a coupon here; show inspiration and similar products instead.")
+icon = {"High intent": "●", "Warm": "◐", "Just browsing": "○"}[level]
+c1, c2, c3 = st.columns([1, 1, 2])
+c1.metric("Purchase probability", f"{sc.score:.0%}", f"buyer threshold {sc.threshold:.0%}", delta_color="off", delta_arrow="off",
+          help="The threshold was tuned on the validation period to balance precision and recall.")
+c2.markdown(f"<div style='padding:.4rem 0'><div style='opacity:.7;font-size:.82rem'>Intent</div>"
+            f"<div style='font-size:1.6rem;font-weight:700'><span style='color:{colour}'>{icon}</span> {level}</div>"
+            f"<div style='opacity:.65;font-size:.82rem'>answered in {sc.latency_ms:.1f} ms</div></div>",
+            unsafe_allow_html=True)
+c3.markdown(f"<div class='card'><div class='step'>SUGGESTED ACTION</div><p style='opacity:1;font-size:1rem'>"
+            f"{action}</p></div>", unsafe_allow_html=True)
+
+st.write("")
 left, right = st.columns([1.15, 1], gap="large")
 with left:
-    st.subheader("Each model's verdict", anchor=False)
-    fig = go.Figure()
-    fig.add_trace(go.Bar(
-        y=[ui.label(sc.model) for sc in scores], x=[sc.score for sc in scores], orientation="h",
-        marker=dict(color=[colours.get(sc.model, ink["muted"]) for sc in scores], cornerradius=4,
-                    opacity=[1 if sc.decision else 0.45 for sc in scores]),
-        text=[f"{sc.score:.0%} · {'buyer' if sc.decision else 'no'}" for sc in scores], textposition="outside",
-        cliponaxis=False, textfont=dict(color=ink["text"], size=11), showlegend=False,
-        customdata=[[sc.threshold, sc.latency_ms] for sc in scores],
-        hovertemplate="<b>%{y}</b><br>score %{x:.3f} · threshold %{customdata[0]:.3f}"
-                      "<br>%{customdata[1]:.1f} ms<extra></extra>",
-    ))
-    fig.add_trace(go.Scatter(
-        y=[ui.label(sc.model) for sc in scores], x=[sc.threshold for sc in scores], mode="markers",
-        name="Decision threshold", marker=dict(symbol="line-ns", size=22, line=dict(width=2.5, color=ink["text"])),
-        hovertemplate="threshold %{x:.3f}<extra></extra>",
-    ))
-    ui.style(fig, height=360, left=150, top=40)
-    fig.update_xaxes(range=[0, 1.28], tickformat=".0%", title="Purchase score", tickvals=[0, .25, .5, .75, 1])
-    fig.update_yaxes(autorange="reversed", showgrid=False)
-    ui.show(fig, key="verdicts")
-    st.caption("Solid bars cross their model's threshold (tuned on the validation week). The rule baseline "
-               "says “buyer” whenever the prefix contains a cart.")
-
-with right:
-    st.subheader("Why LightGBM thinks so", anchor=False)
+    st.subheader("Why · LightGBM explanation", anchor=False)
     if contrib is None:
         st.info("LightGBM is not among the trained models for this K.")
     else:
         body = contrib.filter(pl.col("feature") != "(base)")
-        top = body.head(8)
-        rest = body.slice(8)["contribution"].sum()
+        top = body.head(6)
+        rest = body.slice(6)["contribution"].sum()
         names = [f"{f} = {v}" if v else f for f, v in zip(top["feature"], top["value"])]
         vals = top["contribution"].to_list()
-        if body.height > 8:
-            names.append(f"{body.height - 8} other features")
+        if body.height > 6:
+            names.append(f"{body.height - 6} other features")
             vals.append(rest)
         fig = go.Figure(go.Bar(
             y=names, x=vals, orientation="h",
@@ -210,18 +213,51 @@ with right:
             textfont=dict(color=ink["text"], size=11),
             hovertemplate="%{y}<br>%{x:+.3f} log-odds<extra></extra>",
         ))
-        ui.style(fig, height=360, legend=False, left=280)
+        ui.style(fig, height=330, legend=False, left=230)
         fig.update_yaxes(autorange="reversed", showgrid=False)
         span = max(abs(v) for v in vals) if vals else 1.0
-        fig.update_xaxes(title="Log-odds (TreeSHAP)", zeroline=True, zerolinecolor=ink["muted"],
+        fig.update_xaxes(title="Effect (log-odds)", zeroline=True, zerolinecolor=ink["muted"],
                          range=[min(0.0, min(vals)) - span * 0.45, max(0.0, max(vals)) + span * 0.4])
         ui.show(fig, key="contrib")
-        ui.legend_items([("Pushes toward a purchase", ui.DIVERGING["pos"]), ("Pushes away", ui.DIVERGING["neg"])])
+        ui.legend_items([("Points to a purchase", ui.DIVERGING["pos"]), ("Points away", ui.DIVERGING["neg"])])
 
-with st.expander("The 18 features the models saw"):
+with right:
+    st.subheader("Second opinions from every model", anchor=False)
+    tcol = ui.team_colours()
+    order = [m for t in ("ml", "dl") for m in ui.TEAMS[t]["models"] if m in by_model]
+    fig = go.Figure()
+    for team in ("ml", "dl"):
+        ms = [m for m in order if ui.team_of(m) == team]
+        fig.add_trace(go.Bar(
+            y=[ui.label(m) for m in ms], x=[by_model[m].score for m in ms], orientation="h",
+            name=f"{ui.TEAMS[team]['title']} · {ui.TEAMS[team]['author']}",
+            marker=dict(color=tcol[team], cornerradius=4, opacity=[1 if by_model[m].decision else 0.4 for m in ms]),
+            text=[f"{by_model[m].score:.0%} · {'buyer' if by_model[m].decision else 'no'}" for m in ms],
+            textposition="outside", cliponaxis=False, textfont=dict(color=ink["text"], size=11),
+            hovertemplate="<b>%{y}</b><br>%{x:.1%}<extra></extra>",
+        ))
+    fig.add_trace(go.Scatter(
+        y=[ui.label(m) for m in order], x=[by_model[m].threshold for m in order], mode="markers",
+        name="Threshold", marker=dict(symbol="line-ns", size=20, line=dict(width=2.5, color=ink["text"])),
+        hovertemplate="threshold %{x:.1%}<extra></extra>",
+    ))
+    ui.style(fig, height=360, left=150, top=50, barmode="overlay")
+    fig.update_xaxes(range=[0, 1.3], tickformat=".0%", title="Purchase probability", tickvals=[0, .25, .5, .75, 1])
+    fig.update_yaxes(categoryorder="array", categoryarray=[ui.label(m) for m in order][::-1], showgrid=False)
+    ui.show(fig, key="verdicts")
+    yes = sum(by_model[m].decision for m in order)
+    st.caption(f"{yes} of {len(order)} models call this visit a buyer. Faded bars stay below their threshold.")
+
+with st.expander("Use the engine from your own code"):
+    st.code(f"""from src.config import load_config
+from src.serving.predictor import SessionPredictor
+
+engine = SessionPredictor(load_config(overrides=["data.mode={mode}"]), k={K}, models=["{engine}"])
+result = engine.predict(events)[0]   # events: the visit's first {K} clicks (polars DataFrame)
+print(result.score, result.decision, result.latency_ms)""", language="python")
+    st.caption("The same function can sit behind a web API; it loads the saved model once and scores a visit in "
+               "milliseconds.")
+with st.expander(f"The {feats.width} features computed from these clicks"):
     st.dataframe(feats.select(pl.all().cast(pl.String))
                  .transpose(include_header=True, header_name="feature", column_names=["value"]),
                  hide_index=True, width="stretch")
-with st.expander("Models used"):
-    st.dataframe([{"Model": ui.label(sc.model), "Run": sc.run_id, "Threshold": round(sc.threshold, 4),
-                   "Latency ms": round(sc.latency_ms, 2)} for sc in scores], hide_index=True, width="stretch")

@@ -1,0 +1,190 @@
+{
+  "alpha": 0.05,
+  "test": "paired bootstrap on test PR-AUC, Holm-adjusted within the confirmatory family",
+  "confirmatory_tests": 13,
+  "H1a_trees_beat_logistic_regression": {
+    "verdict": "partly supported",
+    "significant_wins": "4/6",
+    "evidence": [
+      {
+        "k": 3,
+        "model": "random_forest",
+        "diff": 0.017643998364687108,
+        "p_holm": 0.0,
+        "significant_better": true
+      },
+      {
+        "k": 3,
+        "model": "lightgbm",
+        "diff": 0.015268953648845673,
+        "p_holm": 0.0,
+        "significant_better": true
+      },
+      {
+        "k": 5,
+        "model": "random_forest",
+        "diff": 0.013313665802215102,
+        "p_holm": 0.0,
+        "significant_better": true
+      },
+      {
+        "k": 5,
+        "model": "lightgbm",
+        "diff": 0.009868227442089594,
+        "p_holm": 0.0,
+        "significant_better": true
+      },
+      {
+        "k": 10,
+        "model": "random_forest",
+        "diff": 0.003990686706031699,
+        "p_holm": 0.12,
+        "significant_better": false
+      },
+      {
+        "k": 10,
+        "model": "lightgbm",
+        "diff": 0.00135087092390479,
+        "p_holm": 1.0,
+        "significant_better": false
+      }
+    ]
+  },
+  "H1b_deep_tabular_beat_logistic_regression": {
+    "verdict": "partly supported",
+    "significant_wins": "3/6",
+    "evidence": [
+      {
+        "k": 3,
+        "model": "mlp",
+        "diff": 0.015433647087585045,
+        "p_holm": 0.0,
+        "significant_better": true
+      },
+      {
+        "k": 3,
+        "model": "tabnet",
+        "diff": 0.006510368257672816,
+        "p_holm": 0.0,
+        "significant_better": true
+      },
+      {
+        "k": 5,
+        "model": "mlp",
+        "diff": 0.009601213145249532,
+        "p_holm": 0.0,
+        "significant_better": true
+      },
+      {
+        "k": 5,
+        "model": "tabnet",
+        "diff": 0.003412022531901593,
+        "p_holm": 0.06,
+        "significant_better": false
+      },
+      {
+        "k": 10,
+        "model": "mlp",
+        "diff": -0.0011407698206246653,
+        "p_holm": 1.0,
+        "significant_better": false
+      },
+      {
+        "k": 10,
+        "model": "tabnet",
+        "diff": -0.0014125996298985366,
+        "p_holm": 1.0,
+        "significant_better": false
+      }
+    ]
+  },
+  "H1c_gru_matches_best_aggregated_at_max_k": {
+    "verdict": "not supported",
+    "k": 10,
+    "best_aggregated_model": "random_forest",
+    "diff": -0.005024822464501921,
+    "ci": [
+      -0.007912675479904515,
+      -0.002512121364092362
+    ],
+    "p_holm": 0.012
+  },
+  "H2_performance_rises_with_k_diminishing": {
+    "verdict": "not supported",
+    "measure": "PR-AUC lift over the base rate (base rate differs by K)",
+    "models_rising": "0/7",
+    "models_diminishing": "0/7",
+    "evidence": [
+      {
+        "model": "tabnet",
+        "lift_by_k": {
+          "3": 3.2309847266363176,
+          "5": 3.2096462933912013,
+          "10": 2.958393170903166
+        },
+        "rising": false,
+        "diminishing": false
+      },
+      {
+        "model": "gru",
+        "lift_by_k": {
+          "3": 3.291625462080348,
+          "5": 3.2834453541165747,
+          "10": 2.962268424168058
+        },
+        "rising": false,
+        "diminishing": false
+      },
+      {
+        "model": "random_forest",
+        "lift_by_k": {
+          "3": 3.335967408648555,
+          "5": 3.3070759454131617,
+          "10": 3.0137197280602175
+        },
+        "rising": false,
+        "diminishing": false
+      },
+      {
+        "model": "mlp",
+        "lift_by_k": {
+          "3": 3.3151252751279565,
+          "5": 3.270546355259112,
+          "10": 2.9611765524500178
+        },
+        "rising": false,
+        "diminishing": false
+      },
+      {
+        "model": "rule_based",
+        "lift_by_k": {
+          "3": 2.3182465922718047,
+          "5": 2.1101174509802973,
+          "10": 1.8036846184305793
+        },
+        "rising": false,
+        "diminishing": false
+      },
+      {
+        "model": "logistic_regression",
+        "lift_by_k": {
+          "3": 3.169596310278994,
+          "5": 3.1760728592753766,
+          "10": 2.972857381997054
+        },
+        "rising": false,
+        "diminishing": false
+      },
+      {
+        "model": "lightgbm",
+        "lift_by_k": {
+          "3": 3.313572326202719,
+          "5": 3.273173708044483,
+          "10": 2.9866895264988584
+        },
+        "rising": false,
+        "diminishing": false
+      }
+    ]
+  }
+}

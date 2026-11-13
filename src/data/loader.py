@@ -165,10 +165,12 @@ def _cleaning_steps(cfg: Mapping[str, Any]) -> list[tuple[str, Any]]:
     return [
         ("unparseable_event_time", drop_bad_time),
         ("null_session", drop_null_session),
+        # Sampling whole sessions early keeps the multi-month run small; duplicates share a
+        # session id, so sampling before de-duplicating removes exactly the same rows.
+        ("session_sampling", sample_sessions),
         ("unknown_event_type", drop_unknown_event_type),
         ("non_positive_or_null_price", drop_bad_price),
         ("duplicate_rows", drop_duplicates),
-        ("session_sampling", sample_sessions),
         ("over_long_sessions", drop_long_sessions),
     ]
 

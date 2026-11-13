@@ -1,0 +1,156 @@
+{
+  "mode": "full",
+  "cleaning": {
+    "mode": "full",
+    "sources": [
+      "2019-Oct.parquet",
+      "2019-Nov.parquet",
+      "2019-Dec.parquet",
+      "2020-Jan.parquet",
+      "2020-Feb.parquet",
+      "2020-Mar.parquet",
+      "2020-Apr.parquet"
+    ],
+    "rows_in": 411709736,
+    "removed": {
+      "unparseable_event_time": 0,
+      "null_session": 226,
+      "session_sampling": 370524468,
+      "unknown_event_type": 0,
+      "non_positive_or_null_price": 70943,
+      "duplicate_rows": 135438,
+      "over_long_sessions": 867105
+    },
+    "rows_out": 40111556,
+    "sessions_in": 89693595,
+    "sessions_out": 8871684,
+    "purchase_sessions_out": 527121
+  },
+  "sessionize": {
+    "3": {
+      "sessions_total": 8871684,
+      "too_short": 5829395,
+      "purchase_within_prefix": 121526,
+      "eligible": 2920763,
+      "positives": 306389,
+      "k": 3,
+      "positive_rate": 0.1049003291263276,
+      "mode": "full"
+    },
+    "5": {
+      "sessions_total": 8871684,
+      "too_short": 6886493,
+      "purchase_within_prefix": 89476,
+      "eligible": 1895715,
+      "positives": 182700,
+      "k": 5,
+      "positive_rate": 0.09637524627910841,
+      "mode": "full"
+    },
+    "10": {
+      "sessions_total": 8871684,
+      "too_short": 7986929,
+      "purchase_within_prefix": 46520,
+      "eligible": 838235,
+      "positives": 73134,
+      "k": 10,
+      "positive_rate": 0.08724760956056477,
+      "mode": "full"
+    }
+  },
+  "split_cutoffs": {
+    "computed_from_k": 3,
+    "n_sessions": 2920763,
+    "val_start": "2020-03-01T02:58:00+00:00",
+    "test_start": "2020-04-04T07:44:16+00:00"
+  },
+  "splits": {
+    "3": {
+      "k": 3,
+      "sessions_kept": 2920506,
+      "purged_boundary_sessions": 257,
+      "train": {
+        "sessions": 2044496,
+        "fraction": 0.7000485532301595,
+        "positives": 203313,
+        "positive_rate": 0.09944406836697162,
+        "first_start": "2019-10-01T00:02:12+00:00",
+        "last_start": "2020-03-01T02:55:48+00:00"
+      },
+      "val": {
+        "sessions": 437895,
+        "fraction": 0.14993805867887278,
+        "positives": 56575,
+        "positive_rate": 0.12919763870334214,
+        "first_start": "2020-03-01T02:58:00+00:00",
+        "last_start": "2020-04-04T07:42:32+00:00"
+      },
+      "test": {
+        "sessions": 438115,
+        "fraction": 0.1500133880909678,
+        "positives": 46463,
+        "positive_rate": 0.10605206395581068,
+        "first_start": "2020-04-04T07:44:16+00:00",
+        "last_start": "2020-04-30T23:58:50+00:00"
+      }
+    },
+    "5": {
+      "k": 5,
+      "sessions_kept": 1895504,
+      "purged_boundary_sessions": 211,
+      "train": {
+        "sessions": 1315346,
+        "fraction": 0.6939294245752053,
+        "positives": 118723,
+        "positive_rate": 0.09025990119709947,
+        "first_start": "2019-10-01T00:02:12+00:00",
+        "last_start": "2020-03-01T02:55:48+00:00"
+      },
+      "val": {
+        "sessions": 284513,
+        "fraction": 0.15009886552600257,
+        "positives": 33896,
+        "positive_rate": 0.11913691114290033,
+        "first_start": "2020-03-01T02:58:00+00:00",
+        "last_start": "2020-04-04T07:42:32+00:00"
+      },
+      "test": {
+        "sessions": 295645,
+        "fraction": 0.15597170989879208,
+        "positives": 30046,
+        "positive_rate": 0.10162864245970674,
+        "first_start": "2020-04-04T07:44:16+00:00",
+        "last_start": "2020-04-30T23:57:43+00:00"
+      }
+    },
+    "10": {
+      "k": 10,
+      "sessions_kept": 838103,
+      "purged_boundary_sessions": 132,
+      "train": {
+        "sessions": 573638,
+        "fraction": 0.6844480928955033,
+        "positives": 46026,
+        "positive_rate": 0.08023527032727958,
+        "first_start": "2019-10-01T00:05:41+00:00",
+        "last_start": "2020-03-01T02:51:26+00:00"
+      },
+      "val": {
+        "sessions": 126458,
+        "fraction": 0.15088598895362504,
+        "positives": 13607,
+        "positive_rate": 0.10760094260545003,
+        "first_start": "2020-03-01T02:58:14+00:00",
+        "last_start": "2020-04-04T07:34:38+00:00"
+      },
+      "test": {
+        "sessions": 138007,
+        "fraction": 0.16466591815087167,
+        "positives": 13478,
+        "positive_rate": 0.09766171281166898,
+        "first_start": "2020-04-04T07:44:28+00:00",
+        "last_start": "2020-04-30T23:51:39+00:00"
+      }
+    }
+  }
+}
