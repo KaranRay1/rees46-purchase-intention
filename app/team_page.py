@@ -41,7 +41,7 @@ def render(team: str) -> None:
     ink = ui.INK[ui.theme()]
     colours = ui.model_colours()
 
-    ui.page_header(f"{t['title']} models", t["pitch"], rq="2 · Analysis")
+    ui.page_header(f"{t['title']} models", t["pitch"], rq="Models")
     ui.author_chip(team)
     if rq1 is None:
         ui.missing("model results", "03_run_experiments.py")

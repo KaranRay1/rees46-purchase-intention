@@ -18,10 +18,10 @@ from src.utils.notebook import prepared_data_status
 K, mode = ui.k(), st.session_state.get("mode", "dev")
 ink = ui.INK[ui.theme()]
 
-ui.page_header("Try the engine",
-               f"This is how a shop would use it: send the first {K} clicks of a visit, get back a purchase "
+ui.page_header("Live scoring",
+               f"Send the first {K} clicks of a visit and get back a purchase "
                "probability and a suggested action. Build a visit yourself or replay a real one from the test period.",
-               rq="3 · Product")
+               rq="Engine")
 
 
 @st.cache_resource(show_spinner="Loading the trained models…")

@@ -235,26 +235,35 @@ Run notebook 03 before 04: notebook 04 fills the H5 row of the scoreboard that n
 
 ## Dashboard
 
-An interactive front end for presenting the study. It reads what scripts 01–06 wrote and
-loads the saved models, so run the study first (at least steps 01–03 for one mode).
+An application-style front end: shop analytics, the two teams' models, and the live
+scoring engine. It reads what scripts 01–06 wrote and loads the saved models, so run the
+study first (at least steps 01–03 for one mode).
 
 ```bash
 streamlit run app/main.py
 ```
 
-Then open <http://localhost:8501>. The sidebar picks the data (every mode with results in
-`results/tables/` is listed, multi-month first) and K, the number of clicks seen before
-predicting. The pages follow the project's story, research → analysis → product, and show
-only results that hold up statistically:
+Then open <http://localhost:8501>. The sidebar picks the dataset (every mode with results
+in `results/tables/` is listed, multi-month first) and the decision point K, the number of
+clicks seen before scoring. The model pages show only results that hold up statistically.
 
 | Section | Page | Shows |
 |---|---|---|
-| 1 · Research | Overview | The problem, the journey, who built what, the confirmed findings |
-| | The data | Months covered, visits and conversion per month, the time-ordered split |
-| 2 · Analysis | Machine learning · Merve | Rule, LR, random forest, LightGBM: accuracy, what they look at, what each feature group adds, speed |
+| Business | Overview | Shop KPIs, monthly performance, the engine in production, top departments and products, model insights |
+| | Sales & traffic | All months or any single month: KPIs with month-on-month change, daily trend, funnel, revenue by department, month-by-month table (CSV), the train/test window |
+| | Product catalogue | Search by product ID, brand or category; filter by month, department, brand, price, views; product and brand lists (CSV); product detail with orders and price per month and category best sellers |
+| Models | Machine learning · Merve | Rule, LR, random forest, LightGBM: accuracy, what they look at, what each feature group adds, speed |
 | | Deep learning · Karan | MLP, TabNet, GRU: the same four views |
-| | ML vs DL | Head-to-head with significance, accuracy vs speed, the model to ship, the shared limit |
-| 3 · Product | Live demo | Score a built or replayed visit: probability, intent level, suggested action, explanation, every model's opinion |
+| | Model comparison | Head-to-head with significance, accuracy vs speed, the model to ship, the shared limit |
+| Engine | Live scoring | Score a built or replayed visit: probability, intent level, suggested action, explanation, every model's opinion |
+
+The Business pages use `src/serving/catalog.py`, which summarises the cleaned events once
+per mode (per day into `results/tables/daily_profile_<mode>.csv`, per product and month
+into `data/interim/product_month_<mode>.parquet`; about 15 s for the seven months).
+REES46 switched to a new category tree in December 2019 whose labels do not match the
+products (iPhones appear as `construction.tools.light`), so each product keeps its
+Oct/Nov 2019 category, and products first seen later are mapped through their new
+category id.
 
 The live predictor uses `src/serving/predictor.py`: raw events → the same feature code as
 training → each model's saved preprocessor → score and validation-tuned threshold, plus

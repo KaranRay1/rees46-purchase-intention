@@ -14,9 +14,10 @@ pairs = s.csv("rq1_pairwise_tests")
 eff = s.csv("rq4_efficiency")
 summary = s.json("rq5_explain_summary")
 
-ui.page_header("Machine learning vs deep learning",
-               "The two teams' models on the same sessions, the same test period and the same metric.",
-               rq="2 · Analysis")
+ui.page_header("Model comparison",
+               "Machine learning vs deep learning on the same visits, test period and metric, and which model "
+               "the engine runs.",
+               rq="Models")
 if rq1 is None:
     ui.missing("model results", "03_run_experiments.py")
     st.stop()
@@ -54,7 +55,7 @@ if bm and bd:
               help="Paired bootstrap on the same test sessions, Holm-corrected for multiple comparisons.")
 
 # --------------------------------------------------------------------------- all models
-left, right = st.columns([1.5, 1], gap="large")
+left, right = st.columns([1.2, 1], gap="large")
 with left:
     st.subheader("All models, one scale", anchor=False)
     d = part.sort("pr_auc_mean")

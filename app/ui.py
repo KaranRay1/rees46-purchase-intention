@@ -143,10 +143,14 @@ def show(fig: go.Figure, key: str | None = None) -> None:
 
 # --------------------------------------------------------------------------- widgets
 def page_header(title: str, subtitle: str, rq: str | None = None) -> None:
-    if rq:
-        st.caption(rq.upper())
-    st.title(title, anchor=False)
-    st.markdown(f"<p style='font-size:1.05rem;opacity:.75;margin-top:-.6rem'>{subtitle}</p>", unsafe_allow_html=True)
+    """Page title with a section breadcrumb and the active dataset on the right."""
+    crumb = f"<span class='crumb'>{rq}</span>" if rq else ""
+    data = MODE_LABELS.get(st.session_state.get("mode", ""), "")
+    st.markdown(
+        f"<div class='page-head'><div>{crumb}<h1>{title}</h1><p>{subtitle}</p></div>"
+        f"<div class='page-meta'>{'Dataset · ' + data if data else ''}</div></div>",
+        unsafe_allow_html=True,
+    )
 
 
 def verdict_badge(verdict: str) -> str:
@@ -166,6 +170,49 @@ def missing(what: str, script: str) -> None:
 def to_pandas_display(df: pl.DataFrame, rename: Mapping[str, str] | None = None) -> Any:
     out = df.rename({k: v for k, v in (rename or {}).items() if k in df.columns})
     return out.to_pandas()
+
+
+def fmt_money(n: float | int) -> str:
+    return "$" + fmt_int(n)
+
+
+def month_name(m: str, short: bool = False) -> str:
+    """``"2019-10"`` -> ``"Oct 2019"`` (``"Oct 19"`` when short)."""
+    from datetime import datetime
+
+    return datetime.strptime(m, "%Y-%m").strftime("%b %y" if short else "%b %Y")
+
+
+@st.cache_resource(show_spinner="Summarising sales per day…")
+def _daily(mode: str) -> pl.DataFrame | None:
+    from src.serving.catalog import daily_profile
+
+    return daily_profile(_config(mode))
+
+
+@st.cache_resource(show_spinner="Building the product catalogue (first run only)…")
+def _product_month(mode: str) -> pl.DataFrame | None:
+    from src.serving.catalog import product_month
+
+    return product_month(_config(mode))
+
+
+def daily() -> pl.DataFrame | None:
+    return _daily(st.session_state.get("mode", "dev"))
+
+
+def product_month() -> pl.DataFrame | None:
+    return _product_month(st.session_state.get("mode", "dev"))
+
+
+def sample_note() -> str | None:
+    """A one-line caveat when the mode's events are a sample of visits, else None."""
+    clean = (store().json("data_summary") or {}).get("cleaning") or {}
+    if clean.get("removed", {}).get("session_sampling"):
+        share = clean["sessions_out"] / max(clean["sessions_in"], 1)
+        return (f"Counts and revenue are from a random {share:.0%} sample of visits; rates (conversion, cart rate) "
+                "represent the whole shop.")
+    return None
 
 
 def fmt_int(n: float | int) -> str:
@@ -228,8 +275,8 @@ MODEL_INFO = {
     "gru": "A recurrent network that reads the clicks one by one, in order.",
 }
 MODE_LABELS = {
-    "full": "Oct 2019 – Apr 2020 · 7 months",
-    "dev": "Oct 2019 · 1 month",
+    "full": "Oct 2019 – Apr 2020 (7 months)",
+    "dev": "Oct 2019 (1 month)",
     "synthetic": "Synthetic test data",
 }
 

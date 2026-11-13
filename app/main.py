@@ -1,4 +1,4 @@
-"""Purchase-intention research dashboard.
+"""Purchase Intent Engine: the shop dashboard and real-time scoring app.
 
 Run from the project root::
 
@@ -23,7 +23,7 @@ for p in (ROOT, ROOT / "app"):
 import streamlit as st  # noqa: E402
 
 st.set_page_config(
-    page_title="Purchase Intention · REES46",
+    page_title="Purchase Intent Engine",
     page_icon=":material/shopping_cart_checkout:",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -37,16 +37,29 @@ import ui  # noqa: E402
 st.markdown(
     """
     <style>
-      .block-container {padding-top: 2.2rem; max-width: 1280px;}
-      [data-testid="stMetric"] {border: 1px solid rgba(128,128,128,.22); border-radius: .75rem;
-                                padding: .8rem 1rem; background: rgba(128,128,128,.04);}
-      [data-testid="stMetricLabel"] p {font-size: .82rem; opacity: .75;}
-      h1 {letter-spacing: -.02em;}
-      .card {border: 1px solid rgba(128,128,128,.22); border-radius: .75rem; padding: 1rem 1.1rem;
-             height: 100%; background: rgba(128,128,128,.04);}
-      .card h4 {margin: 0 0 .35rem 0; font-size: 1rem;}
+      .block-container {padding-top: 1.6rem; padding-bottom: 3rem; max-width: 1360px;}
+      /* page header */
+      .page-head {display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem;
+                  border-bottom: 1px solid rgba(128,128,128,.22); padding-bottom: .9rem; margin-bottom: 1.2rem;}
+      .page-head h1 {font-size: 1.75rem; font-weight: 700; letter-spacing: -.02em; margin: .15rem 0 .2rem 0;
+                     padding: 0;}
+      .page-head p {margin: 0; opacity: .7; font-size: .98rem; max-width: 60rem;}
+      .page-meta {font-size: .8rem; opacity: .6; white-space: nowrap; padding-bottom: .2rem;}
+      .crumb {font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+              color: var(--primary-color, #2a78d6);}
+      @media (max-width: 760px) {.page-head {flex-direction: column; align-items: flex-start;}}
+      /* KPI tiles and cards */
+      [data-testid="stMetric"] {border: 1px solid rgba(128,128,128,.22); border-radius: .7rem;
+                                padding: .85rem 1rem; background: rgba(128,128,128,.035);}
+      [data-testid="stMetricLabel"] p {font-size: .78rem; opacity: .7; font-weight: 600;}
+      [data-testid="stMetricValue"] {font-size: 1.65rem;}
+      .card {border: 1px solid rgba(128,128,128,.22); border-radius: .7rem; padding: 1rem 1.1rem;
+             height: 100%; background: rgba(128,128,128,.035);}
+      .card h4 {margin: 0 0 .35rem 0; font-size: 1rem; padding: 0;}
       .card p {margin: 0; opacity: .78; font-size: .9rem;}
-      .step {font-size: .75rem; font-weight: 700; letter-spacing: .06em; opacity: .6;}
+      .step {font-size: .72rem; font-weight: 700; letter-spacing: .07em; opacity: .6; text-transform: uppercase;}
+      h3 {font-size: 1.12rem !important; font-weight: 650 !important;}
+      [data-testid="stSidebarNav"] {padding-top: .2rem;}
     </style>
     """,
     unsafe_allow_html=True,
@@ -61,33 +74,34 @@ done = [m for m in modes if (tables_dir / f"rq1_model_comparison_{m}.csv").exist
 modes = done + [m for m in modes if m not in done]      # modes with model results first (the default)
 if st.session_state.get("mode") not in modes:
     st.session_state["mode"] = modes[0]
+
+pages = {
+    "Business": [
+        st.Page("views/overview.py", title="Overview", icon=":material/space_dashboard:", default=True),
+        st.Page("views/data.py", title="Sales & traffic", icon=":material/monitoring:"),
+        st.Page("views/products.py", title="Product catalogue", icon=":material/inventory_2:"),
+    ],
+    "Models": [
+        st.Page("views/ml.py", title="Machine learning · Merve", icon=":material/account_tree:"),
+        st.Page("views/dl.py", title="Deep learning · Karan", icon=":material/neurology:"),
+        st.Page("views/compare.py", title="Model comparison", icon=":material/compare_arrows:"),
+    ],
+    "Engine": [
+        st.Page("views/predict.py", title="Live scoring", icon=":material/bolt:"),
+    ],
+}
+st.logo(str(ROOT / "app" / "static" / "logo.svg"), size="large", icon_image=str(ROOT / "app" / "static" / "icon.svg"))
+nav = st.navigation(pages)
 with st.sidebar:
-    st.markdown("### :material/shopping_cart_checkout: Purchase Intent Engine")
-    st.caption("Will this shopper buy? Answered from the first few clicks, in milliseconds.")
-    st.selectbox("Data", modes, key="mode", format_func=lambda m: ui.MODE_LABELS.get(m, m))
+    st.divider()
+    st.selectbox("Dataset", modes, key="mode", format_func=lambda m: ui.MODE_LABELS.get(m, m))
     rq1 = ui.store().csv("rq1_model_comparison")
     ks = ui.available_ks(rq1) or list(ui.cfg()["sessionize"]["prefix_k"])
     if st.session_state.get("k") not in ks:
         st.session_state["k"] = 5 if 5 in ks else ks[0]
-    st.segmented_control("Clicks seen before predicting (K)", ks, key="k", required=True,
-                         help="The models decide after the first K events of a visit.")
-
-pages = {
-    "1 · Research": [
-        st.Page("views/overview.py", title="Overview", icon=":material/home:", default=True),
-        st.Page("views/data.py", title="The data", icon=":material/database:"),
-    ],
-    "2 · Analysis": [
-        st.Page("views/ml.py", title="Machine learning · Merve", icon=":material/account_tree:"),
-        st.Page("views/dl.py", title="Deep learning · Karan", icon=":material/neurology:"),
-        st.Page("views/compare.py", title="ML vs DL", icon=":material/compare_arrows:"),
-    ],
-    "3 · Product": [
-        st.Page("views/predict.py", title="Live demo", icon=":material/bolt:"),
-    ],
-}
-nav = st.navigation(pages)
-with st.sidebar:
+    st.segmented_control("Decision point (clicks)", ks, key="k", required=True,
+                         help="The models score a visit after its first K clicks. Used by the Models and Engine "
+                              "pages.")
     st.divider()
-    st.caption("Karan Ray · Merve Kara  \nNCI MSc in AI · Machine Learning")
+    st.caption("Machine learning: Merve Kara  \nDeep learning: Karan Ray  \nNCI · MSc in Artificial Intelligence")
 nav.run()
