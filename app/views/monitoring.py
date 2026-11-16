@@ -45,10 +45,16 @@ models = ui.models_in(weekly)
 
 # --------------------------------------------------------------------------- controls + KPIs
 c1, c2 = st.columns([1.2, 3])
+if st.session_state.get("mon_model") not in models:     # a choice left over from another dataset or K
+    st.session_state.pop("mon_model", None)
 model = c1.selectbox("Model", models, index=models.index(ship) if ship in models else 0, key="mon_model",
                      format_func=lambda m: ("★ " if m == ship else "") + ui.label(m))
 w = weekly.filter(pl.col("model") == model).with_columns(pl.col("week").str.to_date()).sort("week")
-overall = ui.per_k(rq1).filter(pl.col("model") == model)
+if w.drop_nulls("pr_auc").is_empty():
+    st.info(f"No weekly results for {ui.label(model)} at K={K}. Pick another model, or rerun "
+            f"`python scripts/07_monitor.py --ks {K}`.")
+    st.stop()
+overall = ui.per_k(rq1).filter(pl.col("model") == model).drop_nulls("pr_auc_mean")
 ref = float(overall["pr_auc_mean"][0]) if overall.height else float(w["pr_auc"].mean())
 full_weeks = w.filter(pl.col("sessions") >= w["sessions"].max() * 0.3)       # ignore part-weeks at the edges
 low = full_weeks.sort("pr_auc").row(0, named=True)

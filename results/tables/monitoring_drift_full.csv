@@ -6,7 +6,7 @@ period,feature,psi,status,sessions,k,granularity,split,days
 2019-10,has_cart,0.0,stable,319933,3,month,train,31
 2019-10,hour_of_day,0.0029706841874622817,stable,319933,3,month,train,31
 2019-10,last_event_type,0.016253110186060342,stable,319933,3,month,train,31
-2019-10,main_category,0.0036518514103829804,stable,319933,3,month,train,31
+2019-10,main_category,0.0036518514103829796,stable,319933,3,month,train,31
 2019-10,max_gap_sec,0.006758975462967135,stable,319933,3,month,train,31
 2019-10,price_max,0.005898491277675442,stable,319933,3,month,train,31
 2019-10,price_mean,0.0020100642077799354,stable,319933,3,month,train,31
@@ -60,7 +60,7 @@ period,feature,psi,status,sessions,k,granularity,split,days
 2020-01,has_cart,0.0,stable,382076,3,month,train,31
 2020-01,hour_of_day,0.00477575327941251,stable,382076,3,month,train,31
 2020-01,last_event_type,0.0003722685139693217,stable,382076,3,month,train,31
-2020-01,main_category,0.0033792483045949518,stable,382076,3,month,train,31
+2020-01,main_category,0.0033792483045949513,stable,382076,3,month,train,31
 2020-01,max_gap_sec,0.003632217975540831,stable,382076,3,month,train,31
 2020-01,price_max,0.004324086443469095,stable,382076,3,month,train,31
 2020-01,price_mean,0.002272064635046799,stable,382076,3,month,train,31
@@ -96,7 +96,7 @@ period,feature,psi,status,sessions,k,granularity,split,days
 2020-03,has_cart,0.0,stable,401038,3,month,val,31
 2020-03,hour_of_day,0.001647683917239279,stable,401038,3,month,val,31
 2020-03,last_event_type,0.004680019678347121,stable,401038,3,month,val,31
-2020-03,main_category,0.010067287209318121,stable,401038,3,month,val,31
+2020-03,main_category,0.010067287209318123,stable,401038,3,month,val,31
 2020-03,max_gap_sec,0.0022141934963727994,stable,401038,3,month,val,31
 2020-03,price_max,0.008752555591564256,stable,401038,3,month,val,31
 2020-03,price_mean,0.006260558976573905,stable,401038,3,month,val,31
@@ -114,7 +114,7 @@ period,feature,psi,status,sessions,k,granularity,split,days
 2020-04,has_cart,0.0,stable,475282,3,month,test,30
 2020-04,hour_of_day,0.003549047076150369,stable,475282,3,month,test,30
 2020-04,last_event_type,0.0005357950271258299,stable,475282,3,month,test,30
-2020-04,main_category,0.058962064817876775,stable,475282,3,month,test,30
+2020-04,main_category,0.05896206481787679,stable,475282,3,month,test,30
 2020-04,max_gap_sec,0.014378433875901049,stable,475282,3,month,test,30
 2020-04,price_max,0.027018590533210672,stable,475282,3,month,test,30
 2020-04,price_mean,0.022087723477980693,stable,475282,3,month,test,30
@@ -132,7 +132,7 @@ period,feature,psi,status,sessions,k,granularity,split,days
 2019-10,has_cart,0.0,stable,203176,5,month,train,31
 2019-10,hour_of_day,0.003042432199848304,stable,203176,5,month,train,31
 2019-10,last_event_type,0.017881578482367357,stable,203176,5,month,train,31
-2019-10,main_category,0.0038081531190994984,stable,203176,5,month,train,31
+2019-10,main_category,0.003808153119099498,stable,203176,5,month,train,31
 2019-10,max_gap_sec,0.004261550071501389,stable,203176,5,month,train,31
 2019-10,price_max,0.005018723618247035,stable,203176,5,month,train,31
 2019-10,price_mean,0.002044016503739367,stable,203176,5,month,train,31
@@ -150,7 +150,7 @@ period,feature,psi,status,sessions,k,granularity,split,days
 2019-11,has_cart,0.0,stable,314296,5,month,train,30
 2019-11,hour_of_day,0.0021990927408129537,stable,314296,5,month,train,30
 2019-11,last_event_type,0.000017332047458621417,stable,314296,5,month,train,30
-2019-11,main_category,0.004239156704290643,stable,314296,5,month,train,30
+2019-11,main_category,0.004239156704290644,stable,314296,5,month,train,30
 2019-11,max_gap_sec,0.004545651816971408,stable,314296,5,month,train,30
 2019-11,price_max,0.002118531990552078,stable,314296,5,month,train,30
 2019-11,price_mean,0.00444996323879131,stable,314296,5,month,train,30
@@ -168,7 +168,7 @@ period,feature,psi,status,sessions,k,granularity,split,days
 2019-12,has_cart,0.0,stable,309166,5,month,train,31
 2019-12,hour_of_day,0.000513730125554342,stable,309166,5,month,train,31
 2019-12,last_event_type,0.001715136310774441,stable,309166,5,month,train,31
-2019-12,main_category,0.0012812053760159257,stable,309166,5,month,train,31
+2019-12,main_category,0.001281205376015926,stable,309166,5,month,train,31
 2019-12,max_gap_sec,0.00004402517406080037,stable,309166,5,month,train,31
 2019-12,price_max,0.002744287837996108,stable,309166,5,month,train,31
 2019-12,price_mean,0.00220880824203101,stable,309166,5,month,train,31
@@ -186,7 +186,7 @@ period,feature,psi,status,sessions,k,granularity,split,days
 2020-01,has_cart,0.0,stable,244792,5,month,train,31
 2020-01,hour_of_day,0.00462999162459403,stable,244792,5,month,train,31
 2020-01,last_event_type,0.00018919111335217905,stable,244792,5,month,train,31
-2020-01,main_category,0.0030480705615666204,stable,244792,5,month,train,31
+2020-01,main_category,0.003048070561566621,stable,244792,5,month,train,31
 2020-01,max_gap_sec,0.0037270337343989915,stable,244792,5,month,train,31
 2020-01,price_max,0.00196996711499373,stable,244792,5,month,train,31
 2020-01,price_mean,0.001260122670638202,stable,244792,5,month,train,31
@@ -204,7 +204,7 @@ period,feature,psi,status,sessions,k,granularity,split,days
 2020-02,has_cart,0.0,stable,243715,5,month,train,29
 2020-02,hour_of_day,0.0009823208702679162,stable,243715,5,month,train,29
 2020-02,last_event_type,0.000997775256110694,stable,243715,5,month,train,29
-2020-02,main_category,0.004400214476172803,stable,243715,5,month,train,29
+2020-02,main_category,0.004400214476172804,stable,243715,5,month,train,29
 2020-02,max_gap_sec,0.005188904431588201,stable,243715,5,month,train,29
 2020-02,price_max,0.002541551033190134,stable,243715,5,month,train,29
 2020-02,price_mean,0.003806526406413035,stable,243715,5,month,train,29
@@ -222,7 +222,7 @@ period,feature,psi,status,sessions,k,granularity,split,days
 2020-03,has_cart,0.0,stable,260071,5,month,val,31
 2020-03,hour_of_day,0.0017857428426063132,stable,260071,5,month,val,31
 2020-03,last_event_type,0.003989009934880506,stable,260071,5,month,val,31
-2020-03,main_category,0.011354461345461213,stable,260071,5,month,val,31
+2020-03,main_category,0.011354461345461211,stable,260071,5,month,val,31
 2020-03,max_gap_sec,0.0012907197024536591,stable,260071,5,month,val,31
 2020-03,price_max,0.005046771256679487,stable,260071,5,month,val,31
 2020-03,price_mean,0.0063733702811853065,stable,260071,5,month,val,31
@@ -240,7 +240,7 @@ period,feature,psi,status,sessions,k,granularity,split,days
 2020-04,has_cart,0.0,stable,320288,5,month,test,30
 2020-04,hour_of_day,0.004067098335828734,stable,320288,5,month,test,30
 2020-04,last_event_type,0.000907344462072962,stable,320288,5,month,test,30
-2020-04,main_category,0.059402809222594596,stable,320288,5,month,test,30
+2020-04,main_category,0.05940280922259459,stable,320288,5,month,test,30
 2020-04,max_gap_sec,0.023141126719506976,stable,320288,5,month,test,30
 2020-04,price_max,0.018273118020140994,stable,320288,5,month,test,30
 2020-04,price_mean,0.02222403398302946,stable,320288,5,month,test,30
@@ -258,7 +258,7 @@ period,feature,psi,status,sessions,k,granularity,split,days
 2019-10,has_cart,0.0,stable,85947,10,month,train,31
 2019-10,hour_of_day,0.003626952717412005,stable,85947,10,month,train,31
 2019-10,last_event_type,0.01738547035501359,stable,85947,10,month,train,31
-2019-10,main_category,0.0040392982743395365,stable,85947,10,month,train,31
+2019-10,main_category,0.004039298274339536,stable,85947,10,month,train,31
 2019-10,max_gap_sec,0.0026922861793855202,stable,85947,10,month,train,31
 2019-10,price_max,0.0019306163886635475,stable,85947,10,month,train,31
 2019-10,price_mean,0.0021235151069730856,stable,85947,10,month,train,31
@@ -276,7 +276,7 @@ period,feature,psi,status,sessions,k,granularity,split,days
 2019-11,has_cart,0.0,stable,140117,10,month,train,30
 2019-11,hour_of_day,0.0024764057203931116,stable,140117,10,month,train,30
 2019-11,last_event_type,0.00006009525771506451,stable,140117,10,month,train,30
-2019-11,main_category,0.004385125231508356,stable,140117,10,month,train,30
+2019-11,main_category,0.004385125231508355,stable,140117,10,month,train,30
 2019-11,max_gap_sec,0.006922917693576315,stable,140117,10,month,train,30
 2019-11,price_max,0.002479700302768465,stable,140117,10,month,train,30
 2019-11,price_mean,0.005580703314805993,stable,140117,10,month,train,30
@@ -348,7 +348,7 @@ period,feature,psi,status,sessions,k,granularity,split,days
 2020-03,has_cart,0.0,stable,115187,10,month,val,31
 2020-03,hour_of_day,0.002384596842938598,stable,115187,10,month,val,31
 2020-03,last_event_type,0.0026207521023217033,stable,115187,10,month,val,31
-2020-03,main_category,0.014109080790818856,stable,115187,10,month,val,31
+2020-03,main_category,0.014109080790818854,stable,115187,10,month,val,31
 2020-03,max_gap_sec,0.000990278790702806,stable,115187,10,month,val,31
 2020-03,price_max,0.005502337540261266,stable,115187,10,month,val,31
 2020-03,price_mean,0.008215248229952262,stable,115187,10,month,val,31

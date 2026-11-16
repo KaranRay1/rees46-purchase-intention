@@ -38,10 +38,9 @@ def weekly_performance(preds: pl.DataFrame, threshold: float, n_resamples: int =
         threshold: the model's validation-tuned decision threshold.
         min_positives: weeks with fewer buyers get no CI (too few to estimate).
     """
-    by = ["week"] + (["split"] if "split" in preds.columns else [])
     df = preds.with_columns(week=pl.col("session_start").dt.truncate("1w").dt.date())
     rows = []
-    for key, g in df.group_by(by, maintain_order=False):
+    for (week,), g in df.group_by(["week"], maintain_order=False):
         y, s = g["y_true"].to_numpy(), g["score"].to_numpy()
         pos, n = int(y.sum()), len(y)
         if pos == 0 or pos == n:
@@ -51,8 +50,11 @@ def weekly_performance(preds: pl.DataFrame, threshold: float, n_resamples: int =
         ci = (bootstrap_ci(y, s, "pr_auc", n_resamples=n_resamples, seed=seed)
               if pos >= min_positives else {"lower": np.nan, "upper": np.nan})
         auc = pr_auc(y, s)
+        split = {}                     # a week that straddles the val/test boundary is scored once, labelled by its majority
+        if "split" in g.columns:
+            split = {"split": g["split"].cast(pl.String).value_counts(sort=True)[0, 0]}
         rows.append({
-            **dict(zip(by, key if isinstance(key, tuple) else (key,), strict=True)),
+            "week": week, **split,
             "sessions": n, "buyers": pos, "base_rate": pos / n,
             "pr_auc": auc, "pr_auc_low": ci["lower"], "pr_auc_high": ci["upper"], "lift": auc / (pos / n),
             "precision": tp / max(int(pred.sum()), 1), "recall": tp / pos, "mean_score": float(s.mean()),
