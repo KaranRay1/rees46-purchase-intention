@@ -1,0 +1,133 @@
+{
+  "features": [
+    "unique_products_count",
+    "session_duration_sec",
+    "max_gap_sec",
+    "view_count",
+    "cart_count",
+    "has_cart",
+    "first_cart_position",
+    "last_event_type",
+    "cart_to_view_ratio",
+    "unique_categories_count",
+    "unique_brands_count",
+    "main_category",
+    "price_mean",
+    "price_max",
+    "price_sum",
+    "price_std",
+    "hour_of_day",
+    "day_of_week"
+  ],
+  "categorical": [
+    "last_event_type",
+    "main_category",
+    "hour_of_day",
+    "day_of_week"
+  ],
+  "log1p_features": [
+    "session_duration_sec",
+    "max_gap_sec",
+    "cart_to_view_ratio",
+    "price_mean",
+    "price_max",
+    "price_sum",
+    "price_std"
+  ],
+  "log1p": false,
+  "scale": false,
+  "categorical_encoding": "ordinal",
+  "top_n": 20,
+  "top_n_features": [
+    "main_category"
+  ],
+  "vocab": {
+    "last_event_type": [
+      "view",
+      "cart"
+    ],
+    "main_category": [
+      "electronics",
+      "unknown",
+      "appliances",
+      "computers",
+      "apparel",
+      "furniture",
+      "construction",
+      "auto",
+      "kids",
+      "sport",
+      "accessories",
+      "country_yard",
+      "medicine",
+      "stationery"
+    ],
+    "hour_of_day": [
+      "16",
+      "15",
+      "17",
+      "14",
+      "13",
+      "8",
+      "9",
+      "10",
+      "7",
+      "12",
+      "11",
+      "6",
+      "18",
+      "5",
+      "4",
+      "19",
+      "3",
+      "2",
+      "20",
+      "21",
+      "1",
+      "22",
+      "0",
+      "23"
+    ],
+    "day_of_week": [
+      "7",
+      "6",
+      "5",
+      "2",
+      "3",
+      "1",
+      "4"
+    ]
+  },
+  "means": {
+    "unique_products_count": 3.461137981945435,
+    "session_duration_sec": 328.9157141923114,
+    "max_gap_sec": 206.64501507588116,
+    "view_count": 4.8329762663208005,
+    "cart_count": 0.16702373367919923,
+    "has_cart": 0.11558175567493267,
+    "first_cart_position": 5.682983792857545,
+    "cart_to_view_ratio": 224.3349064669254,
+    "unique_categories_count": 1.537693504218662,
+    "unique_brands_count": 1.9195451234884204,
+    "price_mean": 275.53711048043635,
+    "price_max": 412.48136602080365,
+    "price_sum": 1377.6855524021817,
+    "price_std": 93.3304373367399
+  },
+  "stds": {
+    "unique_products_count": 1.1701835032853207,
+    "session_duration_sec": 1133.9692398530187,
+    "max_gap_sec": 1002.6158148764956,
+    "view_count": 0.5203144824532256,
+    "cart_count": 0.5203144824532255,
+    "has_cart": 0.31972271334710156,
+    "first_cart_position": 0.9628056039280589,
+    "cart_to_view_ratio": 33486.23035140803,
+    "unique_categories_count": 0.8364316695558613,
+    "unique_brands_count": 1.062928326792246,
+    "price_mean": 294.4306964625853,
+    "price_max": 460.1070320052039,
+    "price_sum": 1472.1534823129264,
+    "price_std": 146.03634672776025
+  }
+}

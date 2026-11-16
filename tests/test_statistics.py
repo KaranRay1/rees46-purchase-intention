@@ -72,7 +72,8 @@ def test_ci_with_callable_metric_slow_path():
 
 
 def test_rare_positives_counted_as_invalid():
-    y = np.zeros(200, dtype=int); y[0] = 1
+    y = np.zeros(200, dtype=int)
+    y[0] = 1
     res = bootstrap_ci(y, np.linspace(0, 1, 200), "pr_auc", n_resamples=200, seed=0)
     assert res["n_invalid"] > 0 and math.isfinite(res["lower"])
 
@@ -117,8 +118,10 @@ def test_mcnemar_exact_small_counts():
 
 def test_mcnemar_chi2_large_counts():
     y = np.ones(200, dtype=int)
-    a = np.ones(200, dtype=int); a[:10] = 0          # A wrong on 10
-    b = np.ones(200, dtype=int); b[100:160] = 0      # B wrong on 60
+    a = np.ones(200, dtype=int)
+    a[:10] = 0                                       # A wrong on 10
+    b = np.ones(200, dtype=int)
+    b[100:160] = 0                                   # B wrong on 60
     r = mcnemar(y, a, b)
     assert (r["b"], r["c"]) == (60, 10)
     assert r["statistic"] == pytest.approx((50 - 1) ** 2 / 70)

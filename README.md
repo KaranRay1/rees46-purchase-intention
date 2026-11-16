@@ -1,5 +1,7 @@
 # Real-Time Session-Based E-Commerce Purchase Intention Prediction
 
+[![CI](https://github.com/KaranRay1/rees46-purchase-intention/actions/workflows/ci.yml/badge.svg)](https://github.com/KaranRay1/rees46-purchase-intention/actions/workflows/ci.yml)
+
 **A comparative analysis of tabular machine learning and deep neural architectures on REES46.**
 
 Joint coursework for the NCI MSc in AI, Machine Learning module, by Karan Ray and Merve Kara.
@@ -8,9 +10,15 @@ From only the **first K events** of a shopping session (K ∈ {3, 5, 10}), we pr
 whether the session will **end in a purchase**. We compare a rule baseline, logistic
 regression, random forest, LightGBM, MLP, TabNet and a GRU over the raw event sequence.
 
-This is Phase 1, the research and analytics version. It has deliberately **no MLOps**:
-experiments are logged to plain files under `results/`. The production blueprint is
-kept unchanged for Phase 2 in [docs/archive/blueprint_with_mlops.md](docs/archive/blueprint_with_mlops.md).
+The study is packaged as a product, the **Purchase Intent Engine**:
+
+- a dashboard with shop analytics, the two teams' models, live scoring, a campaign planner and monitoring;
+- a REST API (`POST /score`) and a Docker image;
+- model and data cards generated from the results;
+- CI on every push.
+
+Experiments are logged to plain files under `results/` (no MLflow). The fuller MLOps
+blueprint is kept in [docs/archive/blueprint_with_mlops.md](docs/archive/blueprint_with_mlops.md).
 
 ---
 
@@ -50,21 +58,26 @@ The main question is split into five sub-questions. The full design is in
 config/config.yaml        every setting (data, K, features, models, evaluation, efficiency)
 src/
   config.py               load / override / validate the config
-  data/                   loader (CSV → cleaned Parquet), sessionize (prefixes + target),
-                          split (chronological), synthetic (REES46-shaped test data)
+  data/                   loader (CSV → cleaned Parquet), categories (Dec 2019 tree fix),
+                          sessionize (prefixes + target), split (chronological), synthetic
   features/               build_features (G1–G5), preprocessing (fit on train), sequences (GRU)
   models/                 BaseModel + rule, LR, RF, LightGBM, MLP, TabNet, GRU
-  evaluation/             metrics, statistics (bootstrap, McNemar, Holm), efficiency (latency)
+  evaluation/             metrics, statistics (bootstrap, McNemar, Holm), efficiency (latency),
+                          monitoring (weekly accuracy, PSI drift)
   explainability/         SHAP / TabNet attention, group aggregation, error groups
   utils/                  results_logger (replaces MLflow), notebook helpers
-  serving/                predictor (score a live session with the saved models), results reader
-scripts/                  01–06 run the study, in order (see below)
+  serving/                predictor (score a live session), recommend (engine model, intent levels),
+                          campaign (planner maths), catalog (shop aggregates), results reader
+  api/                    FastAPI service: /health, /models, /score, /score/all
+scripts/                  01–06 run the study; 07 monitoring, 08 model/data cards, 09 demo bundle
 notebooks/                01–04 present the results
-app/                      Streamlit dashboard: results pages + live predictor
+app/                      Streamlit dashboard (business, models, engine pages)
 tests/                    pytest suite (synthetic data, temporary folders)
 data/                     raw/ (you add the CSVs), interim/, processed/k{3,5,10}/   — git-ignored
-results/                  runs/ (one folder per run, git-ignored), tables/, figures/
-docs/                     research blueprint, proposals analysis, literature review, archive
+results/                  runs/ (one folder per run, git-ignored), tables/, figures/, demo/ (bundle)
+docs/                     model and data cards, research blueprint, literature review, archive
+Dockerfile, docker-compose.yml, requirements-serve.txt   serving image (API + dashboard)
+.github/workflows/ci.yml  lint, tests and image build on every push
 ```
 
 ### Feature groups (RQ3 ablation ladder)
@@ -139,14 +152,14 @@ Every script and notebook takes a mode. The files each mode uses are listed in
 | `full` | Oct 2019 – Apr 2020 | final results for the report |
 
 The multi-month results in this repository were produced with a 10 % sample of whole
-sessions (about 40 M events, the size of one month) and the primary seed, so they run on a
-laptop in a few hours:
+sessions (about 40 M events, the size of one month) and all three seeds, about five hours
+on a laptop:
 
 ```bash
 python scripts/01_prepare_data.py --mode full --set data.session_sample_fraction=0.1
 ```
 
-Pass the same `--set` to scripts 02–06, and `--seeds 42` to scripts 03–04.
+Pass the same `--set` to scripts 02–09.
 
 ---
 
@@ -172,6 +185,15 @@ Run the scripts in order from the project root. Each one reads the previous one'
 ```bash
 .venv/bin/python scripts/06_explain.py --mode dev --ks 3 5 10
 ```
+```bash
+.venv/bin/python scripts/07_monitor.py --mode dev
+```
+```bash
+.venv/bin/python scripts/08_model_cards.py --mode dev
+```
+```bash
+.venv/bin/python scripts/09_build_demo.py --mode dev
+```
 
 | Step | What it does | Main outputs (`results/tables`, `results/figures`) |
 |---|---|---|
@@ -181,8 +203,30 @@ Run the scripts in order from the project root. Each one reads the previous one'
 | 04 | **RQ3**: ablation ladder S1–S5 + variant on LightGBM and MLP | `rq3_ablation`, `rq3_step_tests`, `rq3_hypothesis` |
 | 05 | **RQ4**: single-thread latency (p50/p95/p99), throughput, memory, size | `rq4_efficiency`, `rq4_hardware`, `rq4_hypothesis` |
 | 06 | **RQ5**: SHAP / attention, group importance, agreement, error groups | `rq5_importance_*`, `rq5_error_profile_*`, `rq5_hypothesis` |
+| 07 | Monitoring: weekly PR-AUC (95 % CI) on the weeks after training, PSI drift per feature and month | `monitoring_weekly`, `monitoring_drift`, `monitoring_summary` |
+| 08 | Model card and data card from the tables | `docs/model_card_<mode>.md`, `docs/data_card_<mode>.md` |
+| 09 | Demo bundle for hosting (models, test scores, catalogue) | `results/demo/<mode>/` |
 
-Scripts 05 and 06 retrain nothing: they load the primary-seed models saved by step 03.
+Scripts 05–09 retrain nothing: they load the primary-seed models saved by step 03.
+
+**Monitoring another mode.** Script 07 needs `data/processed` to hold the same mode and
+stops with an explanation otherwise. To monitor `dev` while `data/processed` holds `full`,
+prepare `dev` into its own folder and point script 07 at it:
+
+```bash
+.venv/bin/python scripts/01_prepare_data.py --mode dev --set paths.processed_dir=data/interim/processed_dev
+```
+```bash
+.venv/bin/python scripts/02_build_features.py --mode dev --set paths.processed_dir=data/interim/processed_dev --skip-sequences
+```
+```bash
+.venv/bin/python scripts/07_monitor.py --mode dev --set paths.processed_dir=data/interim/processed_dev
+```
+
+**Category fix.** From 1 December 2019 REES46 uses a new category tree whose labels do
+not describe the products (iPhones appear as `construction.tools.light`). Cleaning maps
+every product back to its Oct/Nov 2019 label (`data.cleaning.harmonise_categories`,
+`src/data/categories.py`); it has no effect on data inside one tree, such as `dev`.
 
 **Common options.** Every script accepts `--mode`, `--set` and `--config`. Scripts 03–06 also take `--models` and `--ks`, and scripts 03–04 take `--seeds` and `--n-resamples`:
 
@@ -256,6 +300,8 @@ clicks seen before scoring. The model pages show only results that hold up stati
 | | Deep learning · Karan | MLP, TabNet, GRU: the same four views |
 | | Model comparison | Head-to-head with significance, accuracy vs speed, the model to ship, the shared limit |
 | Engine | Live scoring | Score a built or replayed visit: probability, intent level, suggested action, explanation, every model's opinion |
+| | Campaign planner | Who should get a discount: skip the visitors who buy anyway, net value vs offering to everyone and vs random, with your discount, offer effect and costs |
+| | Monitoring | Weekly PR-AUC with 95 % CI on the weeks after training, what drives the dips, input drift (PSI) per feature and month, alert rules |
 
 The Business pages use `src/serving/catalog.py`, which summarises the cleaned events once
 per mode (per day into `results/tables/daily_profile_<mode>.csv`, per product and month
@@ -267,9 +313,63 @@ category id.
 
 The live predictor uses `src/serving/predictor.py`: raw events → the same feature code as
 training → each model's saved preprocessor → score and validation-tuned threshold, plus
-LightGBM TreeSHAP contributions. It does not depend on Streamlit, so a later phase can put
-the same `SessionPredictor` behind an HTTP API, or score larger (`full`) runs, without
-changes. Replaying real sessions needs `data/processed/` to hold the selected mode.
+LightGBM TreeSHAP contributions. Replaying real sessions needs `data/processed/` to hold
+the selected mode.
+
+**Campaign planner.** Under a uniform offer effect, discounting the highest-scoring
+visitors is worse than random: they buy anyway. The planner therefore uses the engine to
+*leave out* the top-scoring share and finds the share that maximises net value
+(`src/serving/campaign.py`). The offer effect is an assumption to measure with an A/B test.
+
+## REST API and Docker
+
+```bash
+uvicorn src.api.app:app --port 8000
+```
+
+Interactive docs: <http://localhost:8000/docs>. `PIE_MODE` picks the dataset (default `full`).
+
+| Endpoint | Does |
+|---|---|
+| `GET /health` | Status, mode and the K values with trained models |
+| `GET /models?k=5` | Models, thresholds and the recommended engine model |
+| `POST /score` | One visit's first K events → score, buyer yes/no, intent, action, latency; `explain: true` adds LightGBM contributions |
+| `POST /score/all` | The same from every model |
+
+```bash
+curl -s localhost:8000/score -H 'content-type: application/json' -d '{"k": 3, "events": [
+  {"event_time": "2020-04-10T14:00:00Z", "event_type": "view", "product_id": 1005115, "category_code": "electronics.smartphone", "brand": "apple", "price": 900.9},
+  {"event_time": "2020-04-10T14:00:40Z", "event_type": "view", "product_id": 1005115, "category_code": "electronics.smartphone", "brand": "apple", "price": 900.9},
+  {"event_time": "2020-04-10T14:01:30Z", "event_type": "cart", "product_id": 1005115, "category_code": "electronics.smartphone", "brand": "apple", "price": 900.9}]}'
+```
+
+Both services in containers (results and data are mounted, not copied into the image):
+
+```bash
+docker compose up --build
+```
+
+API on <http://localhost:8000>, dashboard on <http://localhost:8501>.
+
+## Online demo
+
+`results/demo/<mode>/` (built by `scripts/09_build_demo.py`, about 35 MB) holds what a
+hosted copy needs without the raw data or run folders. It contains:
+
+- the primary-seed models, except the 100 MB random forest;
+- every model's test scores;
+- the product catalogue.
+
+When the run folders are missing (a fresh clone, or a cloud host), the dashboard and API
+switch to the bundle automatically. `PIE_DEMO=1` forces it; `PIE_DEMO=0` turns it off.
+
+To host the dashboard on Streamlit Community Cloud:
+
+1. Push the repository to GitHub.
+2. On share.streamlit.io, create an app with main file `app/main.py` and Python 3.12.
+3. Streamlit reads `app/requirements.txt`, which installs CPU-only PyTorch.
+
+Visit replay is not available in the demo.
 
 ## Where results go
 
@@ -282,6 +382,8 @@ changes. Replaying real sessions needs `data/processed/` to hold the selected mo
 - **`results/tables/*_<mode>.csv|json`** and **`results/figures/*_<mode>.png`**: the
   tables and figures for the report. File names carry the mode, so `dev` and `full`
   results sit side by side.
+- **`docs/model_card_<mode>.md`, `docs/data_card_<mode>.md`**: generated by script 08
+  from the tables; regenerate after every run.
 
 ## Reproducibility
 
@@ -297,13 +399,18 @@ changes. Replaying real sessions needs `data/processed/` to hold the selected mo
 .venv/bin/python -m pytest -q
 ```
 
-The suite covers config validation, cleaning, the leakage rules, the split, features,
-preprocessing, every model, metrics against scikit-learn, statistics, efficiency, SHAP
-aggregation and the results logger. It also runs scripts 01–06 and all four notebooks
-end to end on synthetic data in temporary folders.
+The suite covers config validation, cleaning, category harmonisation, the leakage rules,
+the split, features, preprocessing, every model, metrics against scikit-learn,
+statistics, efficiency, SHAP aggregation, the results logger, monitoring, the campaign
+maths, the REST API and the demo switch-over. It also runs scripts 01–07, every
+dashboard page and all four notebooks end to end on synthetic data in temporary folders.
+
+`ruff check .` lints the code (settings in `ruff.toml`). GitHub Actions runs lint, the
+tests and a Docker build on every push (`.github/workflows/ci.yml`).
 
 ## Documents
 
+- [docs/model_card_full.md](docs/model_card_full.md) and [docs/data_card_full.md](docs/data_card_full.md): the engine's model card and the data card (generated).
 - [docs/research_blueprint.md](docs/research_blueprint.md): research questions, hypotheses, models, leakage rules, evaluation.
 - [docs/proposals_analysis.md](docs/proposals_analysis.md): how the two individual proposals were merged.
 - [docs/literature_review.md](docs/literature_review.md): literature review (in progress).

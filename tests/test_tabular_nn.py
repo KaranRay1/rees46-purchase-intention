@@ -101,12 +101,12 @@ def test_mlp_same_seed_same_model(built, mlp):
 
 def test_mlp_architecture_follows_config(mlp, built):
     m, _, pre = mlp
-    linears = [l for l in m.module if isinstance(l, torch.nn.Linear)]
+    linears = [layer for layer in m.module if isinstance(layer, torch.nn.Linear)]
     hidden = built["models"]["mlp"]["hidden_layers"]
-    assert [l.out_features for l in linears] == [*hidden, 1]
+    assert [layer.out_features for layer in linears] == [*hidden, 1]
     assert linears[0].in_features == len(pre.output_columns)
-    assert any(isinstance(l, torch.nn.BatchNorm1d) for l in m.module)
-    assert any(isinstance(l, torch.nn.Dropout) for l in m.module)
+    assert any(isinstance(layer, torch.nn.BatchNorm1d) for layer in m.module)
+    assert any(isinstance(layer, torch.nn.Dropout) for layer in m.module)
 
 
 def test_mlp_history_and_early_stop(mlp, built):

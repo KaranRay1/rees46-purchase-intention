@@ -1,0 +1,48 @@
+{
+  "cat_features": [
+    "event_type",
+    "main_category"
+  ],
+  "num_features": [
+    "log_price",
+    "log_gap_sec"
+  ],
+  "embedding_dims": {
+    "event_type": 4,
+    "main_category": 8
+  },
+  "top_n": 20,
+  "top_n_features": [
+    "main_category"
+  ],
+  "vocab": {
+    "event_type": [
+      "view",
+      "cart"
+    ],
+    "main_category": [
+      "electronics",
+      "unknown",
+      "appliances",
+      "computers",
+      "apparel",
+      "furniture",
+      "construction",
+      "auto",
+      "kids",
+      "sport",
+      "accessories",
+      "country_yard",
+      "medicine",
+      "stationery"
+    ]
+  },
+  "means": {
+    "log_price": 4.985419715943232,
+    "log_gap_sec": 2.9102305704146048
+  },
+  "stds": {
+    "log_price": 1.205968003933718,
+    "log_gap_sec": 1.7229871289810517
+  }
+}

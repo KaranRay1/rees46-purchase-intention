@@ -1,0 +1,13 @@
+# Lint settings (CI runs `ruff check .`).
+line-length = 150
+target-version = "py311"
+extend-exclude = ["notebooks", "results", "data", "docs"]
+
+[lint]
+select = ["E", "F", "W", "B"]
+ignore = ["E731", "B905"]   # named lambdas in tests; zip() over same-length columns throughout
+
+[lint.per-file-ignores]
+"app/main.py" = ["E402"]          # path setup must run before the app imports
+"scripts/*.py" = ["E402"]
+"tests/*.py" = ["E402"]

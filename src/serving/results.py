@@ -96,3 +96,52 @@ def monthly_profile(cfg: Mapping[str, Any]) -> pl.DataFrame | None:
     store.tables_dir.mkdir(parents=True, exist_ok=True)
     out.write_csv(store.path("monthly_profile", "csv"))
     return out
+
+
+def demo_dir(cfg: Mapping[str, Any]) -> Path:
+    """Folder of the lightweight demo bundle for the current mode (``results/demo/<mode>``)."""
+    return resolve_path(cfg, "tables_dir").parent / "demo" / cfg["data"]["mode"]
+
+
+def demo_overrides(cfg: Mapping[str, Any]) -> list[str]:
+    """Config overrides that point the runs at the demo bundle, or ``[]`` to use the real runs.
+
+    The bundle (``scripts/09_build_demo.py``) is used when ``PIE_DEMO=1``, or when it exists
+    and none of the primary-seed run folders listed in ``all_runs.csv`` are on this machine
+    (a fresh clone or a hosted demo: ``results/runs`` is not in git).
+    """
+    import os
+
+    from src.serving.predictor import available_runs
+
+    d = demo_dir(cfg)
+    if not (d / "runs.csv").exists() or os.environ.get("PIE_DEMO") == "0":
+        return []
+    if os.environ.get("PIE_DEMO") != "1":
+        runs = available_runs(cfg)
+        runs_dir = resolve_path(cfg, "runs_dir")
+        if runs.height and any((runs_dir / r).exists() for r in runs["run_id"]):
+            return []
+    return [f"paths.runs_dir={d / 'runs'}", f"paths.all_runs_csv={d / 'runs.csv'}"]
+
+
+def test_predictions(cfg: Mapping[str, Any], k: int, model: str) -> pl.DataFrame | None:
+    """Primary-seed test-split ``y_true`` and ``score`` (and ``user_session`` when known) for one model at K.
+
+    Read from the newest logged run; without runs on this machine, from the demo bundle
+    (``scripts/08_build_demo.py``). ``None`` if neither has it.
+    """
+    from src.serving.predictor import available_runs
+
+    runs = available_runs(cfg)
+    if runs.height:
+        r = runs.filter((pl.col("k") == k) & (pl.col("model") == model))
+        if r.height:
+            p = resolve_path(cfg, "runs_dir") / r["run_id"][0] / "predictions.parquet"
+            if p.exists():
+                return (pl.scan_parquet(p).filter(pl.col("split") == "test")
+                        .select("user_session", "y_true", "score").collect())
+    p = demo_dir(cfg) / f"test_predictions_k{k}.parquet"
+    if p.exists():
+        return pl.scan_parquet(p).filter(pl.col("model") == model).select("y_true", "score").collect()
+    return None

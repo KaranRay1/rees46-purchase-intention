@@ -1,0 +1,44 @@
+{
+  "mode": "full",
+  "runs": [
+    "20261115-213640_rq1_models_rule_based_k3_s42_df1632",
+    "20261115-213641_rq1_models_logistic_regression_k3_s42_133e2e",
+    "20261115-213934_rq1_models_lightgbm_k3_s42_7089c9",
+    "20261115-214005_rq1_models_mlp_k3_s42_5503c5",
+    "20261115-214714_rq1_models_tabnet_k3_s42_9cb931",
+    "20261115-231806_rq1_models_gru_k3_s42_974041",
+    "20261115-233338_rq1_models_rule_based_k5_s42_6c0847",
+    "20261115-233339_rq1_models_logistic_regression_k5_s42_0dad54",
+    "20261115-233529_rq1_models_lightgbm_k5_s42_9762f9",
+    "20261115-233549_rq1_models_mlp_k5_s42_1f56d5",
+    "20261115-233835_rq1_models_tabnet_k5_s42_8d6bfd",
+    "20261115-235506_rq1_models_gru_k5_s42_23f45d",
+    "20261116-000740_rq1_models_rule_based_k10_s42_be44b5",
+    "20261116-000740_rq1_models_logistic_regression_k10_s42_1d56f6",
+    "20261116-000822_rq1_models_lightgbm_k10_s42_0793f6",
+    "20261116-000830_rq1_models_mlp_k10_s42_b04efb",
+    "20261116-000930_rq1_models_tabnet_k10_s42_2a4b74",
+    "20261116-001901_rq1_models_gru_k10_s42_5191e7"
+  ],
+  "size_mb": 33.1,
+  "skipped": [
+    {
+      "k": 3,
+      "model": "random_forest",
+      "model_mb": 111.91,
+      "bundled": false
+    },
+    {
+      "k": 5,
+      "model": "random_forest",
+      "model_mb": 105.13,
+      "bundled": false
+    },
+    {
+      "k": 10,
+      "model": "random_forest",
+      "model_mb": 82.82,
+      "bundled": false
+    }
+  ]
+}

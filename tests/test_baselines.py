@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from sklearn.metrics import average_precision_score
 
-from src.config import load_config
+from src.config import ConfigError, load_config
 from src.data import sessionize, split
 from src.data.loader import ingest
 from src.features import build_features
@@ -121,5 +121,5 @@ def test_threshold_controls_predictions(built):
 
 
 def test_factory_rejects_unknown_model():
-    with pytest.raises(Exception):
+    with pytest.raises(ConfigError, match="xgboost"):
         build_model("xgboost", CFG, seed=0)

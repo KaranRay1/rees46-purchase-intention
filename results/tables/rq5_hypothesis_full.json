@@ -1,113 +1,113 @@
 {
   "H5_cart_signals_rank_highest_for_every_family": {
     "verdict": "partly supported",
-    "cart_group_top": "12/15",
+    "cart_group_top": "13/15",
     "measure": "share of mean |attribution| summed over feature group G2 (exact for SHAP); TabNet uses attention shares",
     "evidence": [
       {
         "k": 3,
         "model": "logistic_regression",
         "top_group": "G2_cart_signals",
-        "top_share": 0.4363062082669731,
-        "cart_group_share": 0.4363062082669731
+        "top_share": 0.4227236918879211,
+        "cart_group_share": 0.4227236918879211
       },
       {
         "k": 3,
         "model": "random_forest",
         "top_group": "G2_cart_signals",
-        "top_share": 0.4970436276072487,
-        "cart_group_share": 0.4970436276072487
+        "top_share": 0.4880471571307486,
+        "cart_group_share": 0.4880471571307486
       },
       {
         "k": 3,
         "model": "lightgbm",
         "top_group": "G2_cart_signals",
-        "top_share": 0.44451574466208804,
-        "cart_group_share": 0.44451574466208804
+        "top_share": 0.43237698891641696,
+        "cart_group_share": 0.43237698891641696
       },
       {
         "k": 3,
         "model": "mlp",
         "top_group": "G2_cart_signals",
-        "top_share": 0.4265619453269712,
-        "cart_group_share": 0.4265619453269712
+        "top_share": 0.42540732760355576,
+        "cart_group_share": 0.42540732760355576
       },
       {
         "k": 3,
         "model": "tabnet",
         "top_group": "G5_price_time",
-        "top_share": 0.4134235574936344,
-        "cart_group_share": 0.050800123854099107
+        "top_share": 0.4077373224948582,
+        "cart_group_share": 0.3283901106956809
       },
       {
         "k": 5,
         "model": "logistic_regression",
         "top_group": "G2_cart_signals",
-        "top_share": 0.44347136156176026,
-        "cart_group_share": 0.44347136156176026
+        "top_share": 0.4343909402282971,
+        "cart_group_share": 0.4343909402282971
       },
       {
         "k": 5,
         "model": "random_forest",
         "top_group": "G2_cart_signals",
-        "top_share": 0.4794898863564958,
-        "cart_group_share": 0.4794898863564958
+        "top_share": 0.47597606276109156,
+        "cart_group_share": 0.47597606276109156
       },
       {
         "k": 5,
         "model": "lightgbm",
         "top_group": "G2_cart_signals",
-        "top_share": 0.4308153111990142,
-        "cart_group_share": 0.4308153111990142
+        "top_share": 0.42236949673612345,
+        "cart_group_share": 0.42236949673612345
       },
       {
         "k": 5,
         "model": "mlp",
         "top_group": "G2_cart_signals",
-        "top_share": 0.4637197004945726,
-        "cart_group_share": 0.4637197004945726
+        "top_share": 0.4281965331266486,
+        "cart_group_share": 0.4281965331266486
       },
       {
         "k": 5,
         "model": "tabnet",
-        "top_group": "G5_price_time",
-        "top_share": 0.3973984657158337,
-        "cart_group_share": 0.2814274099351226
+        "top_group": "G2_cart_signals",
+        "top_share": 0.3850000811428609,
+        "cart_group_share": 0.3850000811428609
       },
       {
         "k": 10,
         "model": "logistic_regression",
         "top_group": "G2_cart_signals",
-        "top_share": 0.38609940759853545,
-        "cart_group_share": 0.38609940759853545
+        "top_share": 0.3878784774212569,
+        "cart_group_share": 0.3878784774212569
       },
       {
         "k": 10,
         "model": "random_forest",
         "top_group": "G2_cart_signals",
-        "top_share": 0.4107972713785749,
-        "cart_group_share": 0.4107972713785749
+        "top_share": 0.40522503519791186,
+        "cart_group_share": 0.40522503519791186
       },
       {
         "k": 10,
         "model": "lightgbm",
         "top_group": "G2_cart_signals",
-        "top_share": 0.40903505130129597,
-        "cart_group_share": 0.40903505130129597
+        "top_share": 0.3778485245201767,
+        "cart_group_share": 0.3778485245201767
       },
       {
         "k": 10,
         "model": "mlp",
         "top_group": "G2_cart_signals",
-        "top_share": 0.39923976108104264,
-        "cart_group_share": 0.39923976108104264
+        "top_share": 0.38276996940701763,
+        "cart_group_share": 0.38276996940701763
       },
       {
         "k": 10,
         "model": "tabnet",
-        "top_group": "G5_price_time",
-        "top_share": 0.43216572722050817,
-        "cart_group_share": 0.3453788621642043
+        "top_group": "G1_activity",
+        "top_share": 0.283358757678322,
+        "cart_group_share": 0.15682475281363595
       }
     ]
   }

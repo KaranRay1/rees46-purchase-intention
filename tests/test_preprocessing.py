@@ -10,7 +10,7 @@ from src.config import feature_list, load_config
 from src.data import sessionize, split
 from src.data.loader import ingest
 from src.features import build_features
-from src.features.preprocessing import OTHER, TabularPreprocessor, prepare_splits, preprocessor_for
+from src.features.preprocessing import TabularPreprocessor, prepare_splits, preprocessor_for
 
 CFG = load_config()
 

@@ -88,6 +88,8 @@ pages = {
     ],
     "Engine": [
         st.Page("views/predict.py", title="Live scoring", icon=":material/bolt:"),
+        st.Page("views/planner.py", title="Campaign planner", icon=":material/campaign:"),
+        st.Page("views/monitoring.py", title="Monitoring", icon=":material/monitor_heart:"),
     ],
 }
 st.logo(str(ROOT / "app" / "static" / "logo.svg"), size="large", icon_image=str(ROOT / "app" / "static" / "icon.svg"))
@@ -102,6 +104,9 @@ with st.sidebar:
     st.segmented_control("Decision point (clicks)", ks, key="k", required=True,
                          help="The models score a visit after its first K clicks. Used by the Models and Engine "
                               "pages.")
+    if ui.demo_mode():
+        st.caption(":material/cloud: **Online demo:** models and summaries from the bundled results "
+                   "(random forest and visit replay not included).")
     st.divider()
     st.caption("Machine learning: Merve Kara  \nDeep learning: Karan Ray  \nNCI · MSc in Artificial Intelligence")
 nav.run()

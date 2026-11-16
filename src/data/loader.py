@@ -221,7 +221,16 @@ def clean_events(
             report["removed"][name] = before - after
             before = after
 
+    from src.data.categories import harmonise
+
+    lf, mapping = harmonise(lf, cfg)
     lf = _finalise(lf, cfg)
+    if report is not None and mapping is not None:
+        unknown = cfg["data"]["cleaning"]["missing_category_token"]
+        report["category_harmonisation"] = {
+            "products": mapping.height,
+            "products_labelled": int((mapping["category_code"] != unknown).sum()),
+        }
     if with_report:
         report["rows_out"] = _count(lf)
         report["sessions_in"] = sessions_in

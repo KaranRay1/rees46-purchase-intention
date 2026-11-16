@@ -1,0 +1,15 @@
+{
+  "run_id": "20261115-233339_rq1_models_logistic_regression_k5_s42_0dad54",
+  "experiment": "rq1_models",
+  "model": "logistic_regression",
+  "k": 5,
+  "seed": 42,
+  "feature_set": "all",
+  "tag": null,
+  "status": "completed",
+  "started_at": "2026-11-15T23:33:39+00:00",
+  "duration_sec": 1.884,
+  "git_commit": "10042ff64058a2014492379ff65150a9f98ea8e3",
+  "git_dirty": true,
+  "data_mode": "full"
+}

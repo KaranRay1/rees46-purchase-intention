@@ -158,12 +158,14 @@ class SessionPredictor:
         return build_features(prefix.lazy(), self.k, self.cfg).collect().drop("user_session")
 
     # ------------------------------------------------------------------ predict
-    def predict(self, events: pl.DataFrame) -> list[ModelScore]:
-        """Score the session with every loaded model, in ``models.enabled`` order."""
+    def predict(self, events: pl.DataFrame, models: Sequence[str] | None = None) -> list[ModelScore]:
+        """Score the session with every loaded model (or only ``models``), in ``models.enabled`` order."""
         prefix = prepare_events(events, self.k)
         feats = build_features(prefix.lazy(), self.k, self.cfg).collect()
         out: list[ModelScore] = []
         for lm in self.loaded.values():
+            if models is not None and lm.name not in models:
+                continue
             start = time.perf_counter()
             X = self._inputs(lm, prefix, feats)
             score = float(lm.model.predict_proba(X)[0])

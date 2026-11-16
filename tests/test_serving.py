@@ -146,7 +146,7 @@ def test_dashboard_pages_render(trained, monkeypatch):
     tmp_over = [f"paths.{p}={trained['paths'][p]}" for p in
                 ("interim_dir", "processed_dir", "tables_dir", "runs_dir", "figures_dir", "all_runs_csv")]
     monkeypatch.setattr(config, "load_config", lambda overrides=None, **kw: real(overrides=[*tmp_over, *(overrides or [])], **kw))
-    for page in ("overview", "data", "products", "ml", "dl", "compare", "predict"):
+    for page in ("overview", "data", "products", "ml", "dl", "compare", "predict", "planner", "monitoring"):
         at = AppTest.from_file(str(PROJECT_ROOT / "app" / "main.py"), default_timeout=120)
         at.session_state["mode"] = "synthetic"
         at.run()
@@ -154,3 +154,18 @@ def test_dashboard_pages_render(trained, monkeypatch):
         if page != "overview":
             at.switch_page(f"views/{page}.py").run()
             assert not at.exception, (page, at.exception)
+
+
+def test_demo_bundle_is_used_only_without_local_runs(tmp_path, monkeypatch):
+    from src.serving.results import demo_dir, demo_overrides
+
+    cfg = load_config(overrides=[f"paths.tables_dir={tmp_path / 'tables'}", f"paths.runs_dir={tmp_path / 'runs'}",
+                                 f"paths.all_runs_csv={tmp_path / 'tables' / 'all_runs.csv'}", "data.mode=dev"])
+    monkeypatch.delenv("PIE_DEMO", raising=False)
+    assert demo_overrides(cfg) == []                       # no bundle
+    d = demo_dir(cfg)
+    d.mkdir(parents=True)
+    (d / "runs.csv").write_text("run_id\n")
+    assert any("demo" in o for o in demo_overrides(cfg))   # bundle, no local runs
+    monkeypatch.setenv("PIE_DEMO", "0")
+    assert demo_overrides(cfg) == []                       # switched off

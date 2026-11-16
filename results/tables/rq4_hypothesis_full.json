@@ -65,11 +65,10 @@
         "rule_based",
         "logistic_regression",
         "random_forest",
-        "lightgbm"
+        "gru"
       ],
       "pareto_front_non_baseline": [
         "random_forest",
-        "lightgbm",
         "mlp",
         "gru"
       ],

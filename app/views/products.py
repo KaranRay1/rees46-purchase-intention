@@ -123,10 +123,10 @@ with listing:
             "months": st.column_config.NumberColumn("Months on sale", help="Months with at least one event."),
         },
     )
-    l, r = st.columns([3, 1])
-    l.caption(f"Showing {min(SHOW, d.height):,} of {d.height:,} products. Select a row to open the product."
+    note_col, dl_col = st.columns([3, 1])
+    note_col.caption(f"Showing {min(SHOW, d.height):,} of {d.height:,} products. Select a row to open the product."
               + (f" {ui.sample_note()}" if ui.sample_note() else ""))
-    r.download_button("Download list (CSV)", d.head(50_000).write_csv(), file_name=f"products_{mode}.csv",
+    dl_col.download_button("Download list (CSV)", d.head(50_000).write_csv(), file_name=f"products_{mode}.csv",
                       mime="text/csv", icon=":material/download:", width="stretch")
 
 with brand_tab:

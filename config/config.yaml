@@ -71,6 +71,14 @@ data:
     max_session_duration_hours: 24   # sessions longer than this are treated as logging artefacts
     missing_category_token: unknown
     missing_brand_token: unknown
+    # REES46 switched to a new category tree on 2019-12-01 whose labels do not match the
+    # products (iPhones under construction.tools.light). Map every product back to its
+    # Oct/Nov 2019 label (src/data/categories.py). No effect on data inside one tree.
+    harmonise_categories:
+      enabled: true
+      tree_change: "2019-12-01"
+      min_share: 0.6            # a new category id takes the old label most of its products agree on
+      min_products: 3
 
 # -----------------------------------------------------------------------------
 # Sessionising and target (leakage rules — see docs/research_blueprint.md §4)

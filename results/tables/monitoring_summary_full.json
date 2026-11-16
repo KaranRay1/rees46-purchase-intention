@@ -1,0 +1,235 @@
+{
+  "psi_thresholds": {
+    "moderate": 0.1,
+    "major": 0.25
+  },
+  "models": {
+    "3": {
+      "logistic_regression": {
+        "weeks": 11,
+        "pr_auc_min": 0.2560791182911445,
+        "pr_auc_max": 0.43840075516064286,
+        "lift_min": 3.0847732137886705,
+        "lift_max": 3.6434225597231675
+      },
+      "random_forest": {
+        "weeks": 11,
+        "pr_auc_min": 0.2695264206066127,
+        "pr_auc_max": 0.4730329423303866,
+        "lift_min": 3.218993673592692,
+        "lift_max": 3.904810980938781
+      },
+      "lightgbm": {
+        "weeks": 11,
+        "pr_auc_min": 0.25828221249505584,
+        "pr_auc_max": 0.46961808726836274,
+        "lift_min": 3.1113120664410454,
+        "lift_max": 3.8885044327447282
+      },
+      "mlp": {
+        "weeks": 11,
+        "pr_auc_min": 0.2611300542755217,
+        "pr_auc_max": 0.4682016215567771,
+        "lift_min": 3.1456176595722334,
+        "lift_max": 3.909052032799792
+      },
+      "tabnet": {
+        "weeks": 11,
+        "pr_auc_min": 0.26530977367523084,
+        "pr_auc_max": 0.45908090771700805,
+        "lift_min": 3.163373228918765,
+        "lift_max": 3.931501121458196
+      },
+      "gru": {
+        "weeks": 11,
+        "pr_auc_min": 0.27070913318082473,
+        "pr_auc_max": 0.46536932115899116,
+        "lift_min": 3.2125394131802123,
+        "lift_max": 4.044314339660055
+      }
+    },
+    "5": {
+      "logistic_regression": {
+        "weeks": 11,
+        "pr_auc_min": 0.24723712907639284,
+        "pr_auc_max": 0.4024465929468758,
+        "lift_min": 3.08220178050085,
+        "lift_max": 3.5740860737363542
+      },
+      "random_forest": {
+        "weeks": 11,
+        "pr_auc_min": 0.25579936243728324,
+        "pr_auc_max": 0.4351605627338294,
+        "lift_min": 3.1889435591672974,
+        "lift_max": 3.934555635222399
+      },
+      "lightgbm": {
+        "weeks": 11,
+        "pr_auc_min": 0.2431866083742492,
+        "pr_auc_max": 0.43044764025412,
+        "lift_min": 3.0317056346883615,
+        "lift_max": 3.863520905524447
+      },
+      "mlp": {
+        "weeks": 11,
+        "pr_auc_min": 0.24406634969880273,
+        "pr_auc_max": 0.42842787411050004,
+        "lift_min": 3.042673001471209,
+        "lift_max": 3.821096429837562
+      },
+      "tabnet": {
+        "weeks": 11,
+        "pr_auc_min": 0.2436225131662521,
+        "pr_auc_max": 0.41602182318146086,
+        "lift_min": 3.0371398772354223,
+        "lift_max": 3.663806353514973
+      },
+      "gru": {
+        "weeks": 11,
+        "pr_auc_min": 0.2541941785770768,
+        "pr_auc_max": 0.434866254299946,
+        "lift_min": 3.168932404004471,
+        "lift_max": 3.9074177761694613
+      }
+    },
+    "10": {
+      "logistic_regression": {
+        "weeks": 11,
+        "pr_auc_min": 0.21990952260896013,
+        "pr_auc_max": 0.3575218940064921,
+        "lift_min": 2.818588854539426,
+        "lift_max": 3.567665809889781
+      },
+      "random_forest": {
+        "weeks": 11,
+        "pr_auc_min": 0.2221304948218145,
+        "pr_auc_max": 0.37286336035189116,
+        "lift_min": 2.8470551412701033,
+        "lift_max": 4.012692557618733
+      },
+      "lightgbm": {
+        "weeks": 11,
+        "pr_auc_min": 0.2104362342917382,
+        "pr_auc_max": 0.3661760948609642,
+        "lift_min": 2.69716935187314,
+        "lift_max": 3.816287717211121
+      },
+      "mlp": {
+        "weeks": 11,
+        "pr_auc_min": 0.2107741104794423,
+        "pr_auc_max": 0.3743206224895926,
+        "lift_min": 2.701499924035631,
+        "lift_max": 3.8436047530704935
+      },
+      "tabnet": {
+        "weeks": 11,
+        "pr_auc_min": 0.21551492459933472,
+        "pr_auc_max": 0.3698460854722558,
+        "lift_min": 2.7622631219237586,
+        "lift_max": 3.927801239219578
+      },
+      "gru": {
+        "weeks": 11,
+        "pr_auc_min": 0.2215131811051732,
+        "pr_auc_max": 0.3762627782219699,
+        "lift_min": 2.8391430074941897,
+        "lift_max": 3.9702321353491947
+      }
+    }
+  },
+  "drift": {
+    "3": {
+      "major": [],
+      "moderate": [],
+      "worst": [
+        {
+          "period": "2020-04",
+          "feature": "main_category",
+          "psi": 0.058962064817876775
+        },
+        {
+          "period": "2020-04",
+          "feature": "price_max",
+          "psi": 0.027018590533210672
+        },
+        {
+          "period": "2020-03",
+          "feature": "unique_categories_count",
+          "psi": 0.026382608444050742
+        },
+        {
+          "period": "2020-04",
+          "feature": "day_of_week",
+          "psi": 0.02450398304848231
+        },
+        {
+          "period": "2020-04",
+          "feature": "price_mean",
+          "psi": 0.022087723477980693
+        }
+      ]
+    },
+    "5": {
+      "major": [],
+      "moderate": [],
+      "worst": [
+        {
+          "period": "2020-04",
+          "feature": "main_category",
+          "psi": 0.059402809222594596
+        },
+        {
+          "period": "2020-03",
+          "feature": "unique_categories_count",
+          "psi": 0.03795758001900661
+        },
+        {
+          "period": "2020-04",
+          "feature": "session_duration_sec",
+          "psi": 0.0280715591738779
+        },
+        {
+          "period": "2020-04",
+          "feature": "day_of_week",
+          "psi": 0.025248681411894493
+        },
+        {
+          "period": "2020-04",
+          "feature": "max_gap_sec",
+          "psi": 0.023141126719506976
+        }
+      ]
+    },
+    "10": {
+      "major": [],
+      "moderate": [],
+      "worst": [
+        {
+          "period": "2020-04",
+          "feature": "main_category",
+          "psi": 0.05882836609875268
+        },
+        {
+          "period": "2020-03",
+          "feature": "unique_categories_count",
+          "psi": 0.05309436329426162
+        },
+        {
+          "period": "2020-04",
+          "feature": "session_duration_sec",
+          "psi": 0.045621718506566517
+        },
+        {
+          "period": "2020-04",
+          "feature": "max_gap_sec",
+          "psi": 0.03348351139825638
+        },
+        {
+          "period": "2020-04",
+          "feature": "day_of_week",
+          "psi": 0.027310017727255154
+        }
+      ]
+    }
+  }
+}

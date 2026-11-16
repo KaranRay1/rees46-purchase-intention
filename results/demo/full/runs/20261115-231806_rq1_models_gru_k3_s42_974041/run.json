@@ -1,0 +1,15 @@
+{
+  "run_id": "20261115-231806_rq1_models_gru_k3_s42_974041",
+  "experiment": "rq1_models",
+  "model": "gru",
+  "k": 3,
+  "seed": 42,
+  "feature_set": "all",
+  "tag": null,
+  "status": "completed",
+  "started_at": "2026-11-15T23:18:07+00:00",
+  "duration_sec": 322.883,
+  "git_commit": "10042ff64058a2014492379ff65150a9f98ea8e3",
+  "git_dirty": true,
+  "data_mode": "full"
+}

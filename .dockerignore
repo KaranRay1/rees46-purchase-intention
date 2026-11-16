@@ -1,0 +1,12 @@
+.venv
+.git
+.claude
+**/__pycache__
+**/.ipynb_checkpoints
+data
+results
+notebooks
+docs
+tests
+*.log
+.DS_Store

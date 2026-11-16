@@ -1,0 +1,21 @@
+{
+  "seed": 42,
+  "class_weight": "balanced",
+  "device": "cpu",
+  "hidden_layers": [
+    128,
+    64,
+    32
+  ],
+  "activation": "relu",
+  "batch_norm": true,
+  "dropout": 0.3,
+  "learning_rate": 0.001,
+  "weight_decay": 1e-05,
+  "batch_size": 1024,
+  "max_epochs": 50,
+  "early_stopping_patience": 5,
+  "monitor": "val_pr_auc",
+  "best_epoch": 7,
+  "feature_groups": "all"
+}

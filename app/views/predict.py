@@ -13,6 +13,7 @@ import team_page
 import ui
 from src.config import processed_dir_for_k, resolve_path
 from src.serving.predictor import SessionPredictor, available_runs
+from src.serving.recommend import intent
 from src.utils.notebook import prepared_data_status
 
 K, mode = ui.k(), st.session_state.get("mode", "dev")
@@ -119,7 +120,10 @@ with build:
 
 with replay:
     status = prepared_data_status(ui._config(mode)).get(K)
-    if status != mode:
+    if ui.demo_mode():
+        st.info("Replaying real visits needs the full training outputs, which the online demo does not include. "
+                "Build a visit in the first tab instead.", icon=":material/info:")
+    elif status != mode:
         st.info(f"The processed data in `data/processed/` is for mode **{status or 'none'}**, not **{mode}**. "
                 f"Run `python scripts/01_prepare_data.py --mode {mode}` to replay real sessions.")
     else:
@@ -171,15 +175,9 @@ engine = pick.selectbox("Engine model", engines, format_func=lambda m: ("★ " i
                         help="★ = recommended: the fastest of the models statistically tied for the best accuracy.",
                         key="engine")
 sc = by_model[engine]
-if sc.decision:
-    level, colour, action = ("High intent", ui.STATUS["good"],
-                             "Keep the path clear: express checkout, no discount needed.")
-elif sc.score >= sc.threshold / 2:
-    level, colour, action = ("Warm", ui.STATUS["warning"],
-                             "Give a nudge: free shipping, a low-stock note or a reminder of the cart.")
-else:
-    level, colour, action = ("Just browsing", ui.STATUS["serious"],
-                             "Don't spend a coupon here; show inspiration and similar products instead.")
+it = intent(sc.score, sc.threshold)
+level, action = it.label, it.action
+colour = {"high": ui.STATUS["good"], "warm": ui.STATUS["warning"], "browsing": ui.STATUS["serious"]}[it.level]
 icon = {"High intent": "●", "Warm": "◐", "Just browsing": "○"}[level]
 c1, c2, c3 = st.columns([1, 1, 2])
 c1.metric("Purchase probability", f"{sc.score:.0%}", f"buyer threshold {sc.threshold:.0%}", delta_color="off", delta_arrow="off",

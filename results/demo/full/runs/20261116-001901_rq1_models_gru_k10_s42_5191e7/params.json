@@ -1,0 +1,30 @@
+{
+  "seed": 42,
+  "class_weight": "balanced",
+  "device": "cpu",
+  "hidden_size": 64,
+  "num_layers": 1,
+  "dropout": 0.2,
+  "bidirectional": false,
+  "learning_rate": 0.001,
+  "batch_size": 1024,
+  "max_epochs": 30,
+  "early_stopping_patience": 5,
+  "monitor": "val_pr_auc",
+  "best_epoch": 16,
+  "embedding_spec": {
+    "event_type": [
+      3,
+      4
+    ],
+    "main_category": [
+      15,
+      8
+    ]
+  },
+  "num_features": [
+    "log_price",
+    "log_gap_sec"
+  ],
+  "feature_groups": "all"
+}

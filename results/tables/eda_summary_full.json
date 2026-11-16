@@ -74,7 +74,7 @@
   },
   "test_sessions_with_train_user": 0.21247103790018435,
   "missing_share": {
-    "missing_category": 0.15815671673270415,
+    "missing_category": 0.2158766167036751,
     "missing_brand": 0.13413867564748672
   },
   "splits": [

@@ -21,6 +21,10 @@
       "duplicate_rows": 135438,
       "over_long_sessions": 867105
     },
+    "category_harmonisation": {
+      "products": 319295,
+      "products_labelled": 185958
+    },
     "rows_out": 40111556,
     "sessions_in": 89693595,
     "sessions_out": 8871684,

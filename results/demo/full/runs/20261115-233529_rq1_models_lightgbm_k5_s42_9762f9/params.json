@@ -1,0 +1,22 @@
+{
+  "seed": 42,
+  "class_weight": "balanced",
+  "n_estimators": 2000,
+  "learning_rate": 0.05,
+  "num_leaves": 31,
+  "max_depth": -1,
+  "min_child_samples": 50,
+  "subsample": 0.8,
+  "subsample_freq": 1,
+  "colsample_bytree": 0.8,
+  "early_stopping_rounds": 50,
+  "eval_metric": "average_precision",
+  "categorical_features": [
+    "last_event_type",
+    "main_category",
+    "hour_of_day",
+    "day_of_week"
+  ],
+  "best_iteration": 264,
+  "feature_groups": "all"
+}

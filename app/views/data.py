@@ -258,7 +258,7 @@ with left:
                "how the engine runs in production.")
 with right:
     st.markdown(
-        f"Each visit is scored after its first **K** clicks (3, 5 or 10). Visits that already bought within those "
+        "Each visit is scored after its first **K** clicks (3, 5 or 10). Visits that already bought within those "
         "clicks are left out, so the answer is never in the input. From the clicks we compute **18 features** "
         "(activity, cart behaviour, cart/view ratio, categories, price & time); the GRU reads the raw clicks."
     )

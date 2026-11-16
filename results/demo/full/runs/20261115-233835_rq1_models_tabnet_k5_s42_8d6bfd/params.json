@@ -1,0 +1,25 @@
+{
+  "seed": 42,
+  "class_weight": "balanced",
+  "device": "cpu",
+  "n_d": 16,
+  "n_a": 16,
+  "n_steps": 4,
+  "gamma": 1.5,
+  "lambda_sparse": 0.0001,
+  "cat_emb_dim": 4,
+  "learning_rate": 0.02,
+  "batch_size": 4096,
+  "virtual_batch_size": 512,
+  "max_epochs": 50,
+  "early_stopping_patience": 5,
+  "monitor": "val_pr_auc",
+  "categorical_columns": [
+    "last_event_type",
+    "main_category",
+    "hour_of_day",
+    "day_of_week"
+  ],
+  "best_epoch": 7,
+  "feature_groups": "all"
+}

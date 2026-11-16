@@ -9,8 +9,8 @@ and cached:
 Category labels: REES46 switched to a new category tree in December 2019 (new
 ``category_id``s whose ``category_code`` text no longer matches the products, e.g.
 iPhones under ``construction.tools.light``). Each product therefore gets one label
-for all months: its Oct/Nov label when it had one, otherwise the label most of the
-products in its new category had in Oct/Nov (see :func:`product_categories`).
+for all months on the Oct/Nov tree (``src/data/categories.py``). Events cleaned with
+``harmonise_categories`` already carry these labels; mapping again is then a no-op.
 
 All counts come from the cleaned events. In ``full`` mode those events are a random
 sample of whole sessions, so counts are the sample's, while rates (conversion,
@@ -68,40 +68,6 @@ def daily_profile(cfg: Mapping[str, Any]) -> pl.DataFrame | None:
     return out
 
 
-TREE_CHANGE = "2019-12-01"     # first day of the new REES46 category tree
-_KNOWN = pl.col("category_code").is_not_null() & (pl.col("category_code") != "unknown")
-
-
-def product_categories(ev: pl.LazyFrame, min_share: float = 0.6, min_products: int = 3) -> pl.DataFrame:
-    """``product_id -> category_code`` on the Oct/Nov 2019 tree, for products in any month.
-
-    A product seen before December keeps its own (most frequent) Oct/Nov label. A
-    product seen only later is labelled through its new ``category_id``: products
-    seen in both periods vote for that id's old label, which is used when at least
-    ``min_products`` of them voted and ``min_share`` agree. Otherwise ``unknown``.
-    """
-    from datetime import datetime, timezone
-
-    cut = datetime.fromisoformat(TREE_CHANGE).replace(tzinfo=timezone.utc)
-    pc = (ev.with_columns(early=pl.col("event_time") < cut)
-          .group_by("product_id", "early", "category_id", "category_code").agg(n=pl.len())
-          .collect(engine="streaming"))
-    old = (pc.filter(pl.col("early") & _KNOWN).sort("n", descending=True)
-           .group_by("product_id").agg(old=pl.col("category_code").first()))
-    new_id = (pc.filter(~pl.col("early")).sort("n", descending=True)
-              .group_by("product_id").agg(cid=pl.col("category_id").first()))
-    votes = new_id.join(old, on="product_id").group_by("cid", "old").agg(n=pl.len())
-    bridge = (votes.sort("n", descending=True).group_by("cid")
-              .agg(bridged=pl.col("old").first(), top=pl.col("n").first(), total=pl.col("n").sum())
-              .filter((pl.col("total") >= min_products) & (pl.col("top") / pl.col("total") >= min_share))
-              .select("cid", "bridged"))
-    return (pc.select("product_id").unique()
-            .join(old, on="product_id", how="left")
-            .join(new_id, on="product_id", how="left")
-            .join(bridge, on="cid", how="left")
-            .select("product_id", category_code=pl.coalesce("old", "bridged", pl.lit("unknown"))))
-
-
 def product_month_path(cfg: Mapping[str, Any]) -> Path:
     return resolve_path(cfg, "interim_dir") / f"product_month_{cfg['data']['mode']}.parquet"
 
@@ -113,8 +79,16 @@ def product_month(cfg: Mapping[str, Any]) -> pl.DataFrame | None:
         return pl.read_parquet(path)
     ev = _events(cfg)
     if ev is None:
-        return None
-    cats = product_categories(ev)
+        from src.serving.results import demo_dir
+
+        demo = demo_dir(cfg) / "product_month.parquet"        # hosted demo: no raw events
+        return pl.read_parquet(demo) if demo.exists() else None
+    from src.data.categories import product_categories
+
+    c = cfg["data"]["cleaning"]
+    h = c.get("harmonise_categories") or {}
+    cats = product_categories(ev, h.get("tree_change", "2019-12-01"), h.get("min_share", 0.6),
+                              h.get("min_products", 3), c["missing_category_token"])
     out = (
         ev.with_columns(month=pl.col("event_time").dt.strftime("%Y-%m"))
         .group_by("month", "product_id")

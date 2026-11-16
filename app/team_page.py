@@ -13,19 +13,7 @@ import streamlit as st
 
 import ui
 
-ALPHA = 0.05
-
-
-def significant_vs(pairs: pl.DataFrame | None, k: int, a: str, b: str) -> tuple[float, bool] | None:
-    """(PR-AUC of a minus b, significant after Holm) from the paired tests, or None if not tested."""
-    if pairs is None:
-        return None
-    p = pairs.filter(pl.col("k") == k)
-    for x, y, sign in ((a, b, 1), (b, a, -1)):
-        r = p.filter((pl.col("model_a") == x) & (pl.col("model_b") == y))
-        if r.height:
-            return sign * float(r["pr_auc_diff"][0]), float(r["p_bootstrap_holm"][0]) < ALPHA
-    return None
+from src.serving.recommend import ALPHA, recommended, significant_vs  # noqa: F401  (re-exported for the pages)
 
 
 def render(team: str) -> None:
@@ -186,19 +174,3 @@ def render(team: str) -> None:
                        f"{r['model_size_mb'][0]:.1f} MB model", delta_color="off", delta_arrow="off",
                        help="95th-percentile time to score one session on one CPU thread (model only).")
     st.caption("Every model here answers well inside a 10 ms real-time budget.")
-
-
-def recommended(rq1: pl.DataFrame, pairs: pl.DataFrame | None, eff: pl.DataFrame | None,
-                k: int) -> tuple[str, list[str]]:
-    """The model to ship at K: the fastest of those statistically tied with the most accurate one.
-
-    Returns (model, tied models best-first). Without benchmarks, the most accurate model.
-    """
-    part = rq1.filter((pl.col("k") == k) & (pl.col("model") != "rule_based")).sort("pr_auc_mean", descending=True)
-    top = part["model"][0]
-    tied = [top] + [m for m in part["model"][1:] if (r := significant_vs(pairs, k, top, m)) is not None and not r[1]]
-    if eff is None:
-        return top, tied
-    e = eff.filter(pl.col("k") == k)
-    lat = dict(zip(e["model"], e["latency_b1_p95_ms"]))
-    return min(tied, key=lambda m: lat.get(m, float("inf"))), tied

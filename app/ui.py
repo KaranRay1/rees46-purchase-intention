@@ -70,7 +70,17 @@ def theme() -> str:
 
 @st.cache_resource(show_spinner=False)
 def _config(mode: str) -> dict[str, Any]:
-    return load_config(overrides=[f"data.mode={mode}"])
+    from src.serving.results import demo_overrides
+
+    cfg = load_config(overrides=[f"data.mode={mode}"])
+    demo = demo_overrides(cfg)                 # no trained runs here: use the bundled demo models
+    return load_config(overrides=[f"data.mode={mode}", *demo]) if demo else cfg
+
+
+def demo_mode() -> bool:
+    from src.config import resolve_path
+
+    return "demo" in resolve_path(cfg(), "runs_dir").parts
 
 
 def cfg() -> dict[str, Any]:

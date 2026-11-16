@@ -1,0 +1,5 @@
+{
+  "seed": 42,
+  "rule": "cart_count_gt_0",
+  "feature_groups": "all"
+}

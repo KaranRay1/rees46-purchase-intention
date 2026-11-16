@@ -7,91 +7,91 @@
   ],
   "H5": {
     "verdict": "partly supported",
-    "cart_group_top": "12/15"
+    "cart_group_top": "13/15"
   },
   "top_features": [
     {
       "feature": "price_std",
-      "mean_share": 0.1875865054332564
-    },
-    {
-      "feature": "cart_count",
-      "mean_share": 0.09121654050079653
-    },
-    {
-      "feature": "has_cart",
-      "mean_share": 0.08588965154921568
+      "mean_share": 0.1676243782017519
     },
     {
       "feature": "view_count",
-      "mean_share": 0.07754943684422277
+      "mean_share": 0.1270516760903872
+    },
+    {
+      "feature": "main_category",
+      "mean_share": 0.1021707383191183
+    },
+    {
+      "feature": "has_cart",
+      "mean_share": 0.08033048401324326
     },
     {
       "feature": "hour_of_day",
-      "mean_share": 0.07473165514908328
+      "mean_share": 0.0699201076541736
     }
   ],
   "mean_rank_agreement": [
     {
       "k": 3,
       "level": "feature",
-      "mean_rho": 0.2086732713848852,
-      "min_rho": -0.07042704654860522
+      "mean_rho": 0.30107126765246106,
+      "min_rho": 0.03304078912176398
     },
     {
       "k": 3,
       "level": "group",
-      "mean_rho": 0.5399999999999999,
-      "min_rho": -0.09999999999999999
+      "mean_rho": 0.9199999999999999,
+      "min_rho": 0.7999999999999999
     },
     {
       "k": 5,
       "level": "feature",
-      "mean_rho": 0.355705145069104,
-      "min_rho": 0.027878165821488353
+      "mean_rho": 0.3502409689705973,
+      "min_rho": 0.11209255624085146
     },
     {
       "k": 5,
       "level": "group",
-      "mean_rho": 0.8299999999999998,
-      "min_rho": 0.6
+      "mean_rho": 0.8999999999999998,
+      "min_rho": 0.7999999999999999
     },
     {
       "k": 10,
       "level": "feature",
-      "mean_rho": 0.30164439129293663,
-      "min_rho": -0.09602479338512657
+      "mean_rho": 0.21185380556425182,
+      "min_rho": -0.2615492978953201
     },
     {
       "k": 10,
       "level": "group",
-      "mean_rho": 0.7799999999999999,
-      "min_rho": 0.49999999999999994
+      "mean_rho": 0.31999999999999995,
+      "min_rho": -0.7
     }
   ],
   "focus_model": "random_forest",
   "buyers_missed_by_all": {
-    "n": 16431,
+    "n": 16454,
     "of": 30046
   },
   "missed_by_all_profile": [
     {
       "status": "buyer caught by \u22651",
-      "sessions": 13615,
-      "has_cart": 0.9983106867425634,
-      "cart_count": 1.5744399559309585,
-      "first_cart_position": 3.329709878810136,
-      "distinct_products": 1.8880646345941976,
+      "sessions": 13592,
+      "has_cart": 1.0,
+      "cart_count": 1.5771041789287816,
+      "first_cart_position": 3.325191288993526,
+      "distinct_products": 1.8886845203060625,
       "median_duration_sec": 176.0,
-      "last_event_cart": 0.6105031215571062
+      "last_event_cart": 0.6115361977633902
     },
     {
       "status": "buyer missed by all",
-      "sessions": 16431,
+      "sessions": 16454,
       "has_cart": 0.0,
       "cart_count": 0.0,
       "first_cart_position": 6.0,
-      "distinct_products": 3.484510985332603,
+      "distinct_products": 3.481767351403914,
       "median_duration_sec": 211.0,
       "last_event_cart": 0.0
     },
