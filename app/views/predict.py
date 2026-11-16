@@ -175,13 +175,30 @@ engine = pick.selectbox("Engine model", engines, format_func=lambda m: ("★ " i
                         help="★ = recommended: the fastest of the models statistically tied for the best accuracy.",
                         key="engine")
 sc = by_model[engine]
+calibrated = all(v.probability is not None for v in by_model.values())
+
+
+def prob(v) -> float:
+    return v.probability if calibrated else v.score
+
+
+def thr(v) -> float:
+    return v.threshold_probability if calibrated else v.threshold
+
+
 it = intent(sc.score, sc.threshold)
 level, action = it.label, it.action
 colour = {"high": ui.STATUS["good"], "warm": ui.STATUS["warning"], "browsing": ui.STATUS["serious"]}[it.level]
 icon = {"High intent": "●", "Warm": "◐", "Just browsing": "○"}[level]
 c1, c2, c3 = st.columns([1, 1, 2])
-c1.metric("Purchase probability", f"{sc.score:.0%}", f"buyer threshold {sc.threshold:.0%}", delta_color="off", delta_arrow="off",
-          help="The threshold was tuned on the validation period to balance precision and recall.")
+if calibrated:
+    c1.metric("Purchase probability", f"{prob(sc):.0%}", f"buyer threshold {thr(sc):.0%}", delta_color="off",
+              delta_arrow="off",
+              help="Calibrated on the validation weeks: of visits given 20 %, about 1 in 5 buy. The threshold was "
+                   "tuned on the validation period to balance precision and recall.")
+else:
+    c1.metric("Intent score", f"{sc.score:.0%}", f"buyer threshold {sc.threshold:.0%}", delta_color="off",
+              delta_arrow="off", help="A ranking score, not a probability: run `scripts/10_calibrate.py` to calibrate.")
 c2.markdown(f"<div style='padding:.4rem 0'><div style='opacity:.7;font-size:.82rem'>Intent</div>"
             f"<div style='font-size:1.6rem;font-weight:700'><span style='color:{colour}'>{icon}</span> {level}</div>"
             f"<div style='opacity:.65;font-size:.82rem'>answered in {sc.latency_ms:.1f} ms</div></div>",
@@ -227,20 +244,22 @@ with right:
     for team in ("ml", "dl"):
         ms = [m for m in order if ui.team_of(m) == team]
         fig.add_trace(go.Bar(
-            y=[ui.label(m) for m in ms], x=[by_model[m].score for m in ms], orientation="h",
+            y=[ui.label(m) for m in ms], x=[prob(by_model[m]) for m in ms], orientation="h",
             name=f"{ui.TEAMS[team]['title']} · {ui.TEAMS[team]['author']}",
             marker=dict(color=tcol[team], cornerradius=4, opacity=[1 if by_model[m].decision else 0.4 for m in ms]),
-            text=[f"{by_model[m].score:.0%} · {'buyer' if by_model[m].decision else 'no'}" for m in ms],
+            text=[f"{prob(by_model[m]):.0%} · {'buyer' if by_model[m].decision else 'no'}" for m in ms],
             textposition="outside", cliponaxis=False, textfont=dict(color=ink["text"], size=11),
             hovertemplate="<b>%{y}</b><br>%{x:.1%}<extra></extra>",
         ))
     fig.add_trace(go.Scatter(
-        y=[ui.label(m) for m in order], x=[by_model[m].threshold for m in order], mode="markers",
+        y=[ui.label(m) for m in order], x=[thr(by_model[m]) for m in order], mode="markers",
         name="Threshold", marker=dict(symbol="line-ns", size=20, line=dict(width=2.5, color=ink["text"])),
         hovertemplate="threshold %{x:.1%}<extra></extra>",
     ))
     ui.style(fig, height=360, left=150, top=50, barmode="overlay")
-    fig.update_xaxes(range=[0, 1.3], tickformat=".0%", title="Purchase probability", tickvals=[0, .25, .5, .75, 1])
+    top_x = max(max(prob(by_model[m]), thr(by_model[m])) for m in order)
+    fig.update_xaxes(range=[0, min(1.0, top_x) * 1.45], tickformat=".0%",
+                     title="Purchase probability" if calibrated else "Intent score (not a probability)")
     fig.update_yaxes(categoryorder="array", categoryarray=[ui.label(m) for m in order][::-1], showgrid=False)
     ui.show(fig, key="verdicts")
     yes = sum(by_model[m].decision for m in order)
@@ -252,7 +271,7 @@ from src.serving.predictor import SessionPredictor
 
 engine = SessionPredictor(load_config(overrides=["data.mode={mode}"]), k={K}, models=["{engine}"])
 result = engine.predict(events)[0]   # events: the visit's first {K} clicks (polars DataFrame)
-print(result.score, result.decision, result.latency_ms)""", language="python")
+print(result.probability, result.decision, result.latency_ms)""", language="python")
     st.caption("The same function can sit behind a web API; it loads the saved model once and scores a visit in "
                "milliseconds.")
 with st.expander(f"The {feats.width} features computed from these clicks"):

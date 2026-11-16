@@ -1,0 +1,14 @@
+{
+  "a": 1.0736045167398718,
+  "b": -1.9911410949281354,
+  "method": "platt",
+  "fitted_on": "val",
+  "test_buyer_rate": 0.106052,
+  "test_mean_score_raw": 0.421292,
+  "test_mean_prob": 0.119919,
+  "test_brier_raw": 0.185117,
+  "test_brier": 0.081219,
+  "test_ece_raw": 0.31524,
+  "test_ece": 0.013867,
+  "test_threshold_prob": 0.174381
+}

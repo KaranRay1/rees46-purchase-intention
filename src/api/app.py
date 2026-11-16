@@ -72,7 +72,8 @@ class ScoreRequest(BaseModel):
 
 class Score(BaseModel):
     model: str
-    score: float
+    probability: float | None = Field(None, description="calibrated purchase probability (null if not calibrated)")
+    score: float = Field(description="ranking score (class-balanced, not a probability)")
     threshold: float
     buyer: bool
     intent: Literal["high", "warm", "browsing"]
@@ -135,7 +136,8 @@ def _check_k(k: int) -> SessionPredictor:
 
 def _to_score(s) -> Score:
     it = intent(s.score, s.threshold)
-    return Score(model=s.model, score=round(s.score, 6), threshold=round(s.threshold, 6), buyer=bool(s.decision),
+    prob = round(s.probability, 6) if s.probability is not None else None
+    return Score(model=s.model, probability=prob, score=round(s.score, 6), threshold=round(s.threshold, 6), buyer=bool(s.decision),
                  intent=it.level, action=it.action, latency_ms=round(s.latency_ms, 3), run_id=s.run_id)
 
 

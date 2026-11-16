@@ -56,6 +56,9 @@ if w.drop_nulls("pr_auc").is_empty():
     st.stop()
 overall = ui.per_k(rq1).filter(pl.col("model") == model).drop_nulls("pr_auc_mean")
 ref = float(overall["pr_auc_mean"][0]) if overall.height else float(w["pr_auc"].mean())
+cal = s.csv("calibration")
+cal = ui.per_k(cal).filter(pl.col("model") == model) if cal is not None else None
+cal_row = cal.row(0, named=True) if cal is not None and cal.height else None
 full_weeks = w.filter(pl.col("sessions") >= w["sessions"].max() * 0.3)       # ignore part-weeks at the edges
 low = full_weeks.sort("pr_auc").row(0, named=True)
 alert_weeks = full_weeks.filter(pl.col("pr_auc_high") < ref)
@@ -117,9 +120,14 @@ with right:
         + (f"- Weekly accuracy follows the share of buyers (correlation **{corr:.2f}**): fewer buyers means a harder "
            "ranking problem, not necessarily a broken model. Lift over random stays between "
            f"**{full_weeks['lift'].min():.1f}×** and **{full_weeks['lift'].max():.1f}×**.\n" if corr is not None else "")
-        + f"- **Scores are rankings, not probabilities.** The average score is {w['mean_score'].mean():.2f} while "
-        f"{w['buyers'].sum() / w['sessions'].sum():.1%} of visits buy: the models were trained with class balancing. "
-        "Use the score to rank and to compare with the tuned threshold, not as a literal chance."
+        + f"- **Raw scores are rankings, not probabilities.** The average raw score is {w['mean_score'].mean():.2f} "
+        f"while {w['buyers'].sum() / w['sessions'].sum():.1%} of visits buy: the models were trained with class "
+        "balancing. " + (
+            f"After calibration (fitted on the validation weeks) the average predicted probability on the test "
+            f"period is **{cal_row['mean_prob']:.1%}** against an actual **{cal_row['buyer_rate']:.1%}**; the "
+            f"calibration error falls from {cal_row['ece_raw']:.2f} to **{cal_row['ece']:.3f}**. Live scoring and "
+            "the API report the calibrated probability." if cal_row else
+            "Run `scripts/10_calibrate.py` to turn them into probabilities.")
     )
     st.markdown("<div class='card'><div class='step'>Alert rules</div><p>Investigate when the weekly 95 % CI "
                 "falls below the test-period PR-AUC for <b>two weeks in a row</b>, or when any input's PSI "

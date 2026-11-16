@@ -192,6 +192,9 @@ Run the scripts in order from the project root. Each one reads the previous one'
 .venv/bin/python scripts/08_model_cards.py --mode dev
 ```
 ```bash
+.venv/bin/python scripts/10_calibrate.py --mode dev
+```
+```bash
 .venv/bin/python scripts/09_build_demo.py --mode dev
 ```
 
@@ -205,9 +208,10 @@ Run the scripts in order from the project root. Each one reads the previous one'
 | 06 | **RQ5**: SHAP / attention, group importance, agreement, error groups | `rq5_importance_*`, `rq5_error_profile_*`, `rq5_hypothesis` |
 | 07 | Monitoring: weekly PR-AUC (95 % CI) on the weeks after training, PSI drift per feature and month | `monitoring_weekly`, `monitoring_drift`, `monitoring_summary` |
 | 08 | Model card and data card from the tables | `docs/model_card_<mode>.md`, `docs/data_card_<mode>.md` |
-| 09 | Demo bundle for hosting (models, test scores, catalogue) | `results/demo/<mode>/` |
+| 09 | Demo bundle for hosting (models, test scores, catalogue, calibration); run after 10 | `results/demo/<mode>/` |
+| 10 | Calibration: Platt scaling fitted on the validation weeks turns scores into purchase probabilities (ranking unchanged) | `calibration.json` per run, `calibration`, `calibration_reliability` |
 
-Scripts 05–09 retrain nothing: they load the primary-seed models saved by step 03.
+Scripts 05–10 retrain nothing: they load the primary-seed models saved by step 03.
 
 **Monitoring another mode.** Script 07 needs `data/processed` to hold the same mode and
 stops with an explanation otherwise. To monitor `dev` while `data/processed` holds `full`,
@@ -333,7 +337,7 @@ Interactive docs: <http://localhost:8000/docs>. `PIE_MODE` picks the dataset (de
 |---|---|
 | `GET /health` | Status, mode and the K values with trained models |
 | `GET /models?k=5` | Models, thresholds and the recommended engine model |
-| `POST /score` | One visit's first K events → score, buyer yes/no, intent, action, latency; `explain: true` adds LightGBM contributions |
+| `POST /score` | One visit's first K events → calibrated purchase probability, raw score, buyer yes/no, intent, action, latency; `explain: true` adds LightGBM contributions |
 | `POST /score/all` | The same from every model |
 
 ```bash

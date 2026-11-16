@@ -35,7 +35,7 @@ from src.serving.catalog import product_month  # noqa: E402
 from src.serving.predictor import available_runs  # noqa: E402
 from src.serving.results import demo_dir  # noqa: E402
 
-RUN_FILES = ("model.pkl", "metrics.json", "params.json", "run.json")
+RUN_FILES = ("model.pkl", "metrics.json", "params.json", "run.json", "calibration.json")
 
 
 def main(argv: list[str] | None = None) -> None:

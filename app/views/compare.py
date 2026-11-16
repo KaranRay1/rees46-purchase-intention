@@ -66,14 +66,19 @@ with left:
             y=[ui.label(m) for m in x["model"]], x=x["pr_auc_mean"], orientation="h",
             name=f"{ui.TEAMS[team]['title']} ({ui.TEAMS[team]['author']})",
             marker=dict(color=tcol[team], cornerradius=4),
-            text=[f"{v:.3f}" for v in x["pr_auc_mean"]], textposition="outside", cliponaxis=False,
+            error_x=dict(type="data", array=x["pr_auc_std"].fill_null(0).to_list(), color=ink["muted"], thickness=1.5,
+                         width=3),
+            text=[f"{v:.4f}" for v in x["pr_auc_mean"]], textposition="outside", cliponaxis=False,
             textfont=dict(color=ink["text"], size=12),
-            hovertemplate="<b>%{y}</b><br>PR-AUC %{x:.4f}<extra></extra>",
+            customdata=x.select("pr_auc_std", "n_seeds").to_numpy(),
+            hovertemplate="<b>%{y}</b><br>PR-AUC %{x:.4f} ± %{customdata[0]:.4f}"
+                          "<br>%{customdata[1]} training runs (seeds)<extra></extra>",
         ))
     ui.style(fig, height=380, left=150, top=50, barmode="overlay")
     fig.update_yaxes(categoryorder="array", categoryarray=[ui.label(m) for m in d["model"]], showgrid=False)
-    fig.update_xaxes(range=[0, float(d["pr_auc_mean"].max()) * 1.2], title=f"PR-AUC after {K} clicks")
+    fig.update_xaxes(range=[0, float(d["pr_auc_mean"].max()) * 1.35], title=f"PR-AUC after {K} clicks")
     ui.show(fig, key="all")
+    st.caption("Mean of three training runs with different random seeds; the whisker is ± one standard deviation.")
 with right:
     st.subheader("Across K (clicks seen)", anchor=False)
     rows = []
@@ -91,9 +96,70 @@ with right:
     if bm and bd:
         gap = abs(bm["pr_auc_mean"] - bd["pr_auc_mean"])
         lift = min(bm["pr_auc_lift_mean"], bd["pr_auc_lift_mean"])
-        st.markdown(f"**In short:** at K={K} the two teams' best models are {gap:.3f} PR-AUC apart and both rank "
+        st.markdown(f"**In short:** at K={K} the two teams' best models are {gap:.4f} PR-AUC apart and both rank "
                     f"buyers at least {lift:.1f}× better than random. The choice between them comes down to speed "
                     "and simplicity.")
+
+# --------------------------------------------------------------------------- head-to-head
+@st.cache_data(show_spinner=False)
+def seed_runs(path: str, mtime: float, mode: str, k: int) -> pl.DataFrame:
+    """Test PR-AUC of every seed's latest rq1 run at K (older reruns of the same seed are dropped)."""
+    del mtime                                   # cache key only: reload when all_runs.csv changes
+    return (pl.read_csv(path, infer_schema_length=0)
+            .filter((pl.col("experiment") == "rq1_models") & (pl.col("data_mode") == mode)
+                    & (pl.col("k") == str(k)) & pl.col("test_pr_auc").is_not_null())
+            .sort("started_at").unique(["model", "seed"], keep="last")
+            .select("model", pl.col("seed").cast(pl.Int64), pl.col("test_pr_auc").cast(pl.Float64)))
+
+
+top = learned.sort("pr_auc_mean", descending=True).head(2)
+if top.height == 2:
+    from src.config import resolve_path
+
+    a, b = top["model"].to_list()
+    st.divider()
+    st.subheader(f"Head-to-head: {ui.label(a)} vs {ui.label(b)}", anchor=False)
+    st.caption(f"The two most accurate models after {K} clicks. Each was trained three times with different random "
+               "seeds and scored on the same test visits.")
+    runs_csv = resolve_path(ui.cfg(), "all_runs_csv")
+    seeds = (seed_runs(str(runs_csv), runs_csv.stat().st_mtime, ui.cfg()["data"]["mode"], K)
+             if runs_csv.exists() else pl.DataFrame())
+    row = (pairs.filter((pl.col("k") == K) & (((pl.col("model_a") == a) & (pl.col("model_b") == b))
+                                             | ((pl.col("model_a") == b) & (pl.col("model_b") == a))))
+           if pairs is not None else pl.DataFrame())
+    left, right = st.columns([1.2, 1], gap="large")
+    with left:
+        if seeds.height:
+            wide = (seeds.filter(pl.col("model").is_in([a, b]))
+                    .pivot(on="model", index="seed", values="test_pr_auc").sort("seed"))
+            if a in wide.columns and b in wide.columns:
+                wide = wide.with_columns(gap=pl.col(a) - pl.col(b))
+                table = [{"Training run": f"seed {r['seed']}", ui.label(a): f"{r[a]:.4f}",
+                          ui.label(b): f"{r[b]:.4f}", "Gap": f"{r['gap']:+.4f}",
+                          "Ahead": ui.label(a) if r["gap"] > 0 else ui.label(b)} for r in wide.iter_rows(named=True)]
+                ra, rb = top.row(0, named=True), top.row(1, named=True)
+                table.append({"Training run": "mean ± sd", ui.label(a): f"{ra['pr_auc_mean']:.4f} ± {ra['pr_auc_std']:.4f}",
+                              ui.label(b): f"{rb['pr_auc_mean']:.4f} ± {rb['pr_auc_std']:.4f}",
+                              "Gap": f"{ra['pr_auc_mean'] - rb['pr_auc_mean']:+.4f}", "Ahead": ""})
+                st.dataframe(table, hide_index=True, width="stretch")
+        else:
+            st.info("Per-seed results are not on this machine (the online demo keeps one seed per model).")
+    with right:
+        if row.height:
+            r = row.row(0, named=True)
+            sign = 1 if r["model_a"] == a else -1
+            lo, hi = sorted((sign * r["diff_ci_low"], sign * r["diff_ci_high"]))
+            sig = r["p_bootstrap_holm"] < team_page.ALPHA
+            st.metric("Difference on the test visits", f"{sign * r['pr_auc_diff']:+.4f}",
+                      f"95% CI {lo:+.4f} to {hi:+.4f}", delta_color="off", delta_arrow="off",
+                      help="Paired bootstrap of the primary-seed models on the same test sessions.")
+            st.metric("Verdict", "Significant" if sig else "A statistical tie",
+                      f"p = {r['p_bootstrap_holm']:.2f} after Holm correction", delta_color="off", delta_arrow="off")
+            st.markdown(
+                (f"**{ui.label(a)} is genuinely ahead**, though by a small margin." if sig else
+                 f"**They are equally accurate.** The gap is smaller than the noise from resampling the test visits"
+                 f"{' and from retraining with another seed' if seeds.height else ''}, so rerunning either model "
+                 "would not settle it. The engine therefore picks between them on speed (below)."))
 
 # --------------------------------------------------------------------------- speed vs accuracy
 st.divider()

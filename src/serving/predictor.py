@@ -35,6 +35,7 @@ from src.features.build_features import build_features
 from src.features.preprocessing import TabularPreprocessor
 from src.features.sequences import SequenceData, SequenceEncoder, event_steps
 from src.models.base import BaseModel
+from src.serving.calibration import Calibrator
 from src.utils.results_logger import load_runs
 
 EXPERIMENT = "rq1_models"
@@ -55,11 +56,13 @@ class ModelScore:
     """One model's verdict on one session."""
 
     model: str
-    score: float          # probability-like score in [0, 1]
+    score: float          # ranking score in [0, 1] (class-balanced training: not a probability)
     threshold: float      # decision threshold tuned on the validation split
     decision: bool        # score >= threshold
     latency_ms: float     # preprocessing + inference for this session (wall clock)
     run_id: str
+    probability: float | None = None   # calibrated purchase probability (None if not calibrated yet)
+    threshold_probability: float | None = None
 
 
 @dataclass
@@ -68,6 +71,7 @@ class LoadedModel:
     run_id: str
     model: BaseModel
     transformer: TabularPreprocessor | SequenceEncoder
+    calibrator: Calibrator | None = None
 
 
 def available_runs(cfg: Mapping[str, Any]) -> pl.DataFrame:
@@ -170,7 +174,9 @@ class SessionPredictor:
             X = self._inputs(lm, prefix, feats)
             score = float(lm.model.predict_proba(X)[0])
             ms = (time.perf_counter() - start) * 1000
-            out.append(ModelScore(lm.name, score, float(lm.model.threshold), score >= lm.model.threshold, ms, lm.run_id))
+            thr, cal = float(lm.model.threshold), lm.calibrator
+            out.append(ModelScore(lm.name, score, thr, score >= thr, ms, lm.run_id,
+                                  cal(score) if cal else None, cal(thr) if cal else None))
         return out
 
     def contributions(self, events: pl.DataFrame) -> pl.DataFrame | None:
@@ -219,4 +225,4 @@ def _load(run_dir: Path, name: str, run_id: str) -> LoadedModel:
         transformer: Any = SequenceEncoder.load(art / "sequence_encoder.json")
     else:
         transformer = TabularPreprocessor.load(art / "preprocessor.json")
-    return LoadedModel(name, run_id, model, transformer)
+    return LoadedModel(name, run_id, model, transformer, Calibrator.load(run_dir))

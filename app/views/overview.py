@@ -46,7 +46,8 @@ if pm is not None:
                 f"{pm['brand'].n_unique():,} brands", delta_color="off", delta_arrow="off")
 if mp is not None and mp.height:
     c[4].metric("Period", f"{mp.height} month" + ("s" if mp.height > 1 else ""),
-                f"{ui.month_name(mp['month'][0], True)} – {ui.month_name(mp['month'][-1], True)}",
+                ui.month_name(mp["month"][0]) if mp.height == 1
+                else f"{ui.month_name(mp['month'][0], True)} – {ui.month_name(mp['month'][-1], True)}",
                 delta_color="off", delta_arrow="off")
 if ui.sample_note():
     st.caption(ui.sample_note())
