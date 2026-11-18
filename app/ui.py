@@ -37,11 +37,12 @@ MODEL_LABELS = {
     "mlp": "MLP",
     "tabnet": "TabNet",
     "gru": "GRU (sequence)",
+    "transformer": "Transformer (sequence)",
 }
 MODEL_FAMILY = {
     "rule_based": "Baseline", "logistic_regression": "Baseline",
     "random_forest": "Tree ensemble", "lightgbm": "Tree ensemble",
-    "mlp": "Deep tabular", "tabnet": "Deep tabular", "gru": "Sequence",
+    "mlp": "Deep tabular", "tabnet": "Deep tabular", "gru": "Sequence", "transformer": "Sequence",
 }
 GROUP_LABELS = {
     "G1_activity": "G1 Activity",

@@ -34,6 +34,7 @@ KNOWN_MODELS = {
     "mlp",
     "tabnet",
     "gru",
+    "transformer",
 }
 
 

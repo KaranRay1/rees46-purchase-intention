@@ -85,11 +85,15 @@ pages = {
         st.Page("views/ml.py", title="Machine learning · Merve", icon=":material/account_tree:"),
         st.Page("views/dl.py", title="Deep learning · Karan", icon=":material/neurology:"),
         st.Page("views/compare.py", title="Model comparison", icon=":material/compare_arrows:"),
+        st.Page("views/advanced.py", title="Advanced ML", icon=":material/science:"),
     ],
     "Engine": [
         st.Page("views/predict.py", title="Live scoring", icon=":material/bolt:"),
         st.Page("views/planner.py", title="Campaign planner", icon=":material/campaign:"),
         st.Page("views/monitoring.py", title="Monitoring", icon=":material/monitor_heart:"),
+    ],
+    "AI": [
+        st.Page("views/assistant.py", title="Analyst assistant", icon=":material/forum:"),
     ],
 }
 st.logo(str(ROOT / "app" / "static" / "logo.svg"), size="large", icon_image=str(ROOT / "app" / "static" / "icon.svg"))

@@ -136,3 +136,87 @@ class GRUModel(TorchBinaryClassifier):
         out["embedding_spec"] = dict(zip(self.cat_features, self.embedding_spec))
         out["num_features"] = self.num_features
         return out
+
+
+# =============================================================================
+# Transformer encoder over the K prefix events (advanced extension)
+# =============================================================================
+class _AttentionBlock(nn.Module if nn is not None else object):
+    """Pre-norm self-attention block that also returns its attention weights."""
+
+    def __init__(self, d_model: int, n_heads: int, ff: int, dropout: float) -> None:
+        super().__init__()
+        self.norm1, self.norm2 = nn.LayerNorm(d_model), nn.LayerNorm(d_model)
+        self.attn = nn.MultiheadAttention(d_model, n_heads, dropout=dropout, batch_first=True)
+        self.ff = nn.Sequential(nn.Linear(d_model, ff), nn.GELU(), nn.Dropout(dropout), nn.Linear(ff, d_model))
+        self.drop = nn.Dropout(dropout)
+
+    def forward(self, x):
+        h = self.norm1(x)
+        a, w = self.attn(h, h, h, need_weights=True, average_attn_weights=True)
+        x = x + self.drop(a)
+        return x + self.drop(self.ff(self.norm2(x))), w
+
+
+class _TransformerNet(nn.Module if nn is not None else object):
+    """Per-step embeddings -> linear projection + learned positions + [CLS] -> attention blocks -> head.
+
+    Unlike the GRU, every click can attend to every other click directly, and the [CLS]
+    token's attention shows which clicks the prediction relied on.
+    """
+
+    def __init__(self, embedding_spec, n_numeric: int, d_model: int, n_heads: int, n_layers: int,
+                 ff: int, dropout: float, max_len: int = 64) -> None:
+        super().__init__()
+        self.embeddings = nn.ModuleList(nn.Embedding(n, d) for n, d in embedding_spec)
+        self.proj = nn.Linear(sum(d for _, d in embedding_spec) + n_numeric, d_model)
+        self.pos = nn.Embedding(max_len + 1, d_model)
+        self.cls = nn.Parameter(torch.zeros(1, 1, d_model))
+        self.blocks = nn.ModuleList(_AttentionBlock(d_model, n_heads, ff, dropout) for _ in range(n_layers))
+        self.norm = nn.LayerNorm(d_model)
+        self.head = nn.Sequential(nn.Dropout(dropout), nn.Linear(d_model, 1))
+        nn.init.normal_(self.cls, std=0.02)
+
+    def encode(self, cat, num):
+        parts = [emb(cat[..., i]) for i, emb in enumerate(self.embeddings)]
+        x = self.proj(torch.cat([*parts, num], dim=-1))                     # (batch, K, d)
+        x = torch.cat([self.cls.expand(len(x), -1, -1), x], dim=1)          # (batch, 1 + K, d)
+        x = x + self.pos(torch.arange(x.shape[1], device=x.device))[None]
+        weights = []
+        for blk in self.blocks:
+            x, w = blk(x)
+            weights.append(w)
+        return self.norm(x[:, 0]), weights
+
+    def forward(self, cat, num):
+        h, _ = self.encode(cat, num)
+        return self.head(h).squeeze(-1)
+
+
+class TransformerModel(GRUModel):
+    """Transformer-encoder classifier on the same per-event sequences as the GRU.
+
+    Params (``models.transformer``): ``d_model``, ``n_heads``, ``n_layers``, ``ff_dim``,
+    ``dropout`` + the shared training settings (``torch_base.py``).
+    """
+
+    name = "transformer"
+
+    def _build_module(self, example):
+        return _TransformerNet(
+            embedding_spec=self.embedding_spec, n_numeric=len(self.num_features),
+            d_model=int(self.params.get("d_model", 64)), n_heads=int(self.params.get("n_heads", 4)),
+            n_layers=int(self.params.get("n_layers", 2)), ff=int(self.params.get("ff_dim", 128)),
+            dropout=float(self.params.get("dropout", 0.1)),
+        )
+
+    def attention(self, X, max_rows: int = 5000) -> np.ndarray:
+        """Mean attention of [CLS] on each click position in the last layer, shape (K,), summing to ~1."""
+        cat, num = self._to_tensors(X)
+        cat, num = cat[:max_rows], num[:max_rows]
+        self.module.eval()
+        with torch.no_grad():
+            _, weights = self.module.encode(cat.to(self.device), num.to(self.device))
+        w = weights[-1][:, 0, 1:]                                           # CLS row, skip CLS column
+        w = w / w.sum(dim=1, keepdim=True).clamp_min(1e-12)
+        return w.mean(dim=0).cpu().numpy()

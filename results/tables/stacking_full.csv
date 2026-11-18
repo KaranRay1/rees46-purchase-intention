@@ -1,0 +1,34 @@
+k,method,kind,members,val_pr_auc,test_pr_auc,best_single,C,weights
+3,logistic_regression,single,logistic_regression,0.4216522528308365,0.34013040775875153,false,,
+3,random_forest,single,random_forest,0.4528940410917059,0.35549114295668505,true,,
+3,lightgbm,single,lightgbm,0.4510218121829058,0.3529724103758358,false,,
+3,mlp,single,mlp,0.4508615099845712,0.3532999777580757,false,,
+3,tabnet,single,tabnet,0.441002931054848,0.3482961199056775,false,,
+3,gru,single,gru,0.45006735559501576,0.3543438733395246,false,,
+3,stack_ml,stacked (logistic meta-model),"logistic_regression, random_forest, lightgbm",0.45316091806190856,0.35528656999774116,,10.0,"{""logistic_regression"": -0.0226, ""random_forest"": 0.562, ""lightgbm"": 0.48}"
+3,stack_dl,stacked (logistic meta-model),"mlp, tabnet, gru",0.45443936234364557,0.35757047090850136,,0.01,"{""mlp"": 0.549, ""tabnet"": 0.0102, ""gru"": 0.4486}"
+3,stack_all,stacked (logistic meta-model),"logistic_regression, random_forest, lightgbm, mlp, tabnet, gru",0.45549639709359635,0.35733182957840387,,0.01,"{""logistic_regression"": -0.1309, ""random_forest"": 0.1321, ""lightgbm"": 0.2589, ""mlp"": 0.3176, ""tabnet"": 0.031, ""gru"": 0.404}"
+3,mean_logit_all,average,"logistic_regression, random_forest, lightgbm, mlp, tabnet, gru",,0.35634086789866326,,,
+3,mean_rank_all,average,"logistic_regression, random_forest, lightgbm, mlp, tabnet, gru",,0.3567752986490864,,,
+5,logistic_regression,single,logistic_regression,0.3884756029687457,0.32498651379428634,false,,
+5,random_forest,single,random_forest,0.4172987664563955,0.33702417819641,true,,
+5,lightgbm,single,lightgbm,0.41437223122138966,0.3330212699463821,false,,
+5,mlp,single,mlp,0.413714184541829,0.3326474008703242,false,,
+5,tabnet,single,tabnet,0.40183669242034986,0.3241568194765549,false,,
+5,gru,single,gru,0.4169535593058804,0.3352004580538048,false,,
+5,stack_ml,stacked (logistic meta-model),"logistic_regression, random_forest, lightgbm",0.41813653897694547,0.33649627096217133,,10.0,"{""logistic_regression"": -0.0401, ""random_forest"": 0.5812, ""lightgbm"": 0.4758}"
+5,stack_dl,stacked (logistic meta-model),"mlp, tabnet, gru",0.4200264905599919,0.33882724349662485,,10.0,"{""mlp"": 0.4212, ""tabnet"": 0.126, ""gru"": 0.5112}"
+5,stack_all,stacked (logistic meta-model),"logistic_regression, random_forest, lightgbm, mlp, tabnet, gru",0.42075499344691253,0.33826223920509463,,10.0,"{""logistic_regression"": -0.0989, ""random_forest"": 0.1199, ""lightgbm"": 0.3762, ""mlp"": 0.1187, ""tabnet"": 0.0658, ""gru"": 0.4595}"
+5,mean_logit_all,average,"logistic_regression, random_forest, lightgbm, mlp, tabnet, gru",,0.33869586879504743,,,
+5,mean_rank_all,average,"logistic_regression, random_forest, lightgbm, mlp, tabnet, gru",,0.3380206632277635,,,
+10,logistic_regression,single,logistic_regression,0.3296091411394057,0.2913032569784577,false,,
+10,random_forest,single,random_forest,0.3469644785207898,0.29650651823142343,false,,
+10,lightgbm,single,lightgbm,0.34443262065013386,0.29379995185368757,false,,
+10,mlp,single,mlp,0.3485827574002776,0.2905084186910767,false,,
+10,tabnet,single,tabnet,0.3435263104539126,0.291492210566657,false,,
+10,gru,single,gru,0.3487534506818908,0.29551412108803515,true,,
+10,stack_ml,stacked (logistic meta-model),"logistic_regression, random_forest, lightgbm",0.34810422237441296,0.2965707506759657,,10.0,"{""logistic_regression"": -0.036, ""random_forest"": 0.5913, ""lightgbm"": 0.5006}"
+10,stack_dl,stacked (logistic meta-model),"mlp, tabnet, gru",0.35393087059408107,0.2976289075801521,,0.01,"{""mlp"": 0.5052, ""tabnet"": 0.0558, ""gru"": 0.4814}"
+10,stack_all,stacked (logistic meta-model),"logistic_regression, random_forest, lightgbm, mlp, tabnet, gru",0.35556785175499905,0.29616585918668165,,1.0,"{""logistic_regression"": -0.2312, ""random_forest"": 0.1396, ""lightgbm"": 0.1677, ""mlp"": 0.5036, ""tabnet"": 0.0113, ""gru"": 0.47}"
+10,mean_logit_all,average,"logistic_regression, random_forest, lightgbm, mlp, tabnet, gru",,0.2980821825115648,,,
+10,mean_rank_all,average,"logistic_regression, random_forest, lightgbm, mlp, tabnet, gru",,0.29818369040772585,,,

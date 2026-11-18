@@ -161,6 +161,7 @@ class LightGBMModel(BaseModel):
             subsample=float(self.params.get("subsample", 1.0)),
             subsample_freq=int(self.params.get("subsample_freq", 0)),
             colsample_bytree=float(self.params.get("colsample_bytree", 1.0)),
+            reg_lambda=float(self.params.get("reg_lambda", 0.0)),   # LightGBM's default; tuned in step 15
             class_weight=class_weight,
             metric=self.eval_metric,        # replaces the default logloss
             random_state=seed,

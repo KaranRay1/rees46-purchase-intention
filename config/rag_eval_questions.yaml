@@ -1,0 +1,72 @@
+# Hand-written evaluation questions for the RAG analyst (scripts/11_rag_eval.py).
+# Factual questions about every model and K are generated from the result tables on top of these.
+#
+#   gold:    a retrieved chunk is relevant if its source matches and (optionally) its text
+#            contains the phrase (case-insensitive).
+#   expect:  phrases that a correct answer must contain (any one of each inner list).
+#   answerable: false -> the correct behaviour is to say the sources do not cover it.
+
+- id: c01
+  question: Why are the models' raw scores not purchase probabilities, and how was that fixed?
+  gold: [{source: calibration}, {source: readme, contains: calibrat}]
+  expect: [[balanc], [platt, calibrat]]
+- id: c02
+  question: Which hypothesis about the GRU and the random forest at K=10 changed after the three-seed run?
+  gold: [{source: hypotheses}, {source: report_updates, contains: H1c}]
+  expect: [[H1c], [supported, tied, " tie"]]
+- id: c03
+  question: Is there any input drift after the training period?
+  gold: [{source: monitoring}]
+  expect: [["none", "no "]]
+- id: c04
+  question: How were sessions split into training, validation and test sets?
+  gold: [{source: report, contains: chronolog}, {source: data_card, contains: split}, {source: readme, contains: chronolog}]
+  expect: [[chronolog, time]]
+- id: c05
+  question: What went wrong with the category labels from December 2019 and how was it handled?
+  gold: [{source: data_card, contains: categor}, {source: report_updates, contains: categor}, {source: readme, contains: categor}]
+  expect: [[categor], [tree, label]]
+- id: c06
+  question: Which feature group is the strongest buying signal?
+  gold: [{source: rq5_importance}, {source: rq3_ablation}, {source: report, contains: cart}]
+  expect: [[cart]]
+- id: c07
+  question: Do machine learning or deep learning models win at K=3?
+  gold: [{source: rq1_ml_vs_dl, contains: "K=3"}]
+  expect: [[random forest], [significant]]
+- id: c08
+  question: Which model is the slowest to score a single visit and is it still fast enough for real time?
+  gold: [{source: rq4_efficiency}, {source: report, contains: latency}]
+  expect: [[random forest]]
+- id: c09
+  question: How many visits and what conversion rate did the shop have in January 2020?
+  gold: [{source: data_monthly}]
+  expect: [[2020-01, january]]
+- id: c10
+  question: What metric is used to compare the models and why not accuracy?
+  gold: [{source: report, contains: PR-AUC}, {source: readme, contains: PR-AUC}, {source: model_card}]
+  expect: [[pr-auc, pr auc, precision-recall]]
+- id: c11
+  question: Who built the deep-learning models in this project?
+  gold: [{source: report, contains: Karan}, {source: readme, contains: Karan}]
+  expect: [[karan]]
+- id: c12
+  question: What does the campaign planner recommend doing with the highest-intent visitors?
+  gold: [{source: readme, contains: planner}, {source: report_updates, contains: planner}]
+  expect: [[suppress, exclude, not offer, without, leave out, leave them out]]
+# Not answerable from the project's sources: the assistant should say so.
+- id: u01
+  question: What was the shop's revenue in 2022?
+  answerable: false
+  gold: []
+  expect: []
+- id: u02
+  question: What is the PR-AUC of XGBoost at K=5?
+  answerable: false
+  gold: []
+  expect: []
+- id: u03
+  question: Which marketing agency ran the shop's Black Friday campaign?
+  answerable: false
+  gold: []
+  expect: []

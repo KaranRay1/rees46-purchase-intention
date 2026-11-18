@@ -9,3 +9,6 @@ data/processed/**/*.parquet
 data/processed/**/*.json
 results/runs/*
 !**/.gitkeep
+
+# Local secrets (Claude API key, LLM settings): never commit
+.env

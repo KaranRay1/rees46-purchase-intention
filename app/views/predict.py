@@ -235,6 +235,28 @@ with left:
                          range=[min(0.0, min(vals)) - span * 0.45, max(0.0, max(vals)) + span * 0.4])
         ui.show(fig, key="contrib")
         ui.legend_items([("Points to a purchase", ui.DIVERGING["pos"]), ("Points away", ui.DIVERGING["neg"])])
+        if calibrated and st.button("Explain in plain English", icon=":material/auto_awesome:", key="explain_btn",
+                                    help="A language model turns the probability and these contributions into a "
+                                         "short explanation; it is checked against the facts it was given."):
+            from src.llm.providers import LLMError, get_provider
+            from src.llm.rag import explain_visit
+
+            m = st.session_state.get("ai_model")
+            prov = None if m == "none" else get_provider("ollama", m)
+            if prov is None or not prov.available()[0]:
+                st.info("No language model is available. Set one up on the Analyst assistant page.")
+            else:
+                top_rows = body.head(5)
+                try:
+                    with st.spinner(f"Asking {prov.model}…"):
+                        ex = explain_visit(prov, ui.label(engine), prob(sc), thr(sc), level, list(zip(
+                            top_rows["feature"], top_rows["value"], top_rows["contribution"])), K, list(feats.columns))
+                    st.markdown(ex.text)
+                    st.caption(f"{prov.model} · {ex.seconds:.1f} s · " + (
+                        ":green-badge[:material/verified: only given facts used]" if ex.grounded else
+                        f":orange-badge[:material/warning: check: {', '.join(ex.unknown_features + ex.ungrounded_numbers)}]"))
+                except LLMError as e:
+                    st.warning(f"The language model failed: {e}")
 
 with right:
     st.subheader("Second opinions from every model", anchor=False)

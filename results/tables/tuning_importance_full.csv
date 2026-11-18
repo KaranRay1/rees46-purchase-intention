@@ -1,0 +1,17 @@
+k,model,param,importance
+5,lightgbm,reg_lambda,0.38023819583835905
+5,lightgbm,learning_rate,0.3119125958405163
+5,lightgbm,subsample,0.21366713686287694
+5,lightgbm,num_leaves,0.057511681579002494
+5,lightgbm,colsample_bytree,0.03463351292447336
+5,lightgbm,min_child_samples,0.002036876954771809
+5,mlp,weight_decay,0.6293770236912732
+5,mlp,learning_rate,0.36545313957017456
+5,mlp,batch_size,0.0030128088406102334
+5,mlp,hidden_layers,0.0013001339007450098
+5,mlp,dropout,0.0008568939971969771
+5,gru,learning_rate,0.517068733085024
+5,gru,dropout,0.4359507253904164
+5,gru,num_layers,0.04046100545799903
+5,gru,bidirectional,0.0039033977464677507
+5,gru,hidden_size,0.0026161383200928364

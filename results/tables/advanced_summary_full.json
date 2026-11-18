@@ -1,0 +1,34 @@
+{
+  "mode": "full",
+  "alphas": [
+    0.05,
+    0.1,
+    0.2
+  ],
+  "ks": [
+    3,
+    5,
+    10
+  ],
+  "k3": {
+    "engine": "gru",
+    "best_single_on_val": "random_forest",
+    "best_ensemble": "stack_dl",
+    "gain": 0.002079327951816312,
+    "p_holm": 0.0
+  },
+  "k5": {
+    "engine": "gru",
+    "best_single_on_val": "random_forest",
+    "best_ensemble": "stack_dl",
+    "gain": 0.00180306530021479,
+    "p_holm": 0.04
+  },
+  "k10": {
+    "engine": "logistic_regression",
+    "best_single_on_val": "gru",
+    "best_ensemble": "mean_rank_all",
+    "gain": 0.0026695693196906456,
+    "p_holm": 0.17
+  }
+}

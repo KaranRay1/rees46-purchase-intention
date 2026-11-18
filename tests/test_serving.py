@@ -146,7 +146,7 @@ def test_dashboard_pages_render(trained, monkeypatch):
     tmp_over = [f"paths.{p}={trained['paths'][p]}" for p in
                 ("interim_dir", "processed_dir", "tables_dir", "runs_dir", "figures_dir", "all_runs_csv")]
     monkeypatch.setattr(config, "load_config", lambda overrides=None, **kw: real(overrides=[*tmp_over, *(overrides or [])], **kw))
-    for page in ("overview", "data", "products", "ml", "dl", "compare", "predict", "planner", "monitoring"):
+    for page in ("overview", "data", "products", "ml", "dl", "compare", "predict", "planner", "monitoring", "assistant", "advanced"):
         at = AppTest.from_file(str(PROJECT_ROOT / "app" / "main.py"), default_timeout=120)
         at.session_state["mode"] = "synthetic"
         at.run()

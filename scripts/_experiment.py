@@ -20,6 +20,9 @@ from src.models.base import build_model
 from src.utils.results_logger import load_predictions, load_runs, start_run
 
 
+SEQUENCE_MODELS = ("gru", "transformer")
+
+
 class InputCache:
     """Prepared inputs per (K, preprocessing profile, feature groups) and GRU sequences per K."""
 
@@ -30,9 +33,9 @@ class InputCache:
 
     def get(self, k: int, model: str, groups: Sequence[str] | None = None):
         """Returns ``(data, preprocessor_or_encoder, model_extra_kwargs, columns)``."""
-        if model == "gru":
+        if model in SEQUENCE_MODELS:
             if groups is not None:
-                raise ValueError("Feature groups do not apply to the GRU (it reads raw event sequences).")
+                raise ValueError("Feature groups do not apply to sequence models (they read raw event sequences).")
             if k not in self._seq:
                 self._seq[k] = prepare_sequence_splits(self.cfg, k)
             data, enc = self._seq[k]
@@ -48,7 +51,7 @@ class InputCache:
 
 def xy(split_data: Any, model_name: str):
     """Model input and labels for one split."""
-    return (split_data, split_data.y) if model_name == "gru" else (split_data.X, split_data.y)
+    return (split_data, split_data.y) if model_name in SEQUENCE_MODELS else (split_data.X, split_data.y)
 
 
 def train_and_log(
@@ -84,7 +87,7 @@ def train_and_log(
         run.log_predictions("val", data["val"].session_ids, y_va, res["val_scores"], model.threshold)
         run.log_predictions("test", data["test"].session_ids, data["test"].y, res["test_scores"], model.threshold)
         run.log_model(model)
-        run.log_artifact("preprocessor" if model_name != "gru" else "sequence_encoder", prep)
+        run.log_artifact("sequence_encoder" if model_name in SEQUENCE_MODELS else "preprocessor", prep)
         if getattr(model, "history_", None):
             run.log_artifact("training_history", model.history_)
 

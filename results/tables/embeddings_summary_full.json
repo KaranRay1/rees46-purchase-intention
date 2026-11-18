@@ -1,0 +1,8 @@
+{
+  "mode": "full",
+  "item2vec_products": 101518,
+  "item2vec_dim": 16,
+  "fitted_before": "2020-03-01 02:58:00+00:00",
+  "text_model": "nomic-embed-text",
+  "note": null
+}

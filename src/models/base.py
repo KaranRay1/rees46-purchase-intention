@@ -152,11 +152,11 @@ def build_model(
             params, class_weight=class_weight, seed=seed, device=device,
             columns=columns, cat_dims=extra["cat_dims"],
         )
-    if name == "gru":
-        from src.models.sequence_models import GRUModel
+    if name in ("gru", "transformer"):
+        from src.models.sequence_models import GRUModel, TransformerModel
         if "embedding_spec" not in extra:
-            raise ValueError("gru needs embedding_spec=encoder.embedding_spec()")
-        return GRUModel(
+            raise ValueError(f"{name} needs embedding_spec=encoder.embedding_spec()")
+        return (GRUModel if name == "gru" else TransformerModel)(
             params,
             embedding_spec=extra["embedding_spec"],
             num_features=extra.get("num_features", list(cfg["sequences"]["numerical"])),

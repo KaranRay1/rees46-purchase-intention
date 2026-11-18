@@ -291,6 +291,19 @@ models:
     early_stopping_patience: 5
     monitor: val_pr_auc
 
+  transformer:                  # PyTorch, advanced extension (scripts/16_transformer.py); not in models.enabled
+    d_model: 64
+    n_heads: 4
+    n_layers: 2
+    ff_dim: 128
+    dropout: 0.1
+    learning_rate: 5.0e-4
+    weight_decay: 1.0e-5
+    batch_size: 1024
+    max_epochs: 30
+    early_stopping_patience: 5
+    monitor: val_pr_auc
+
 # -----------------------------------------------------------------------------
 # Evaluation (RQ1–RQ3)
 # -----------------------------------------------------------------------------

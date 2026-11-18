@@ -325,6 +325,78 @@ visitors is worse than random: they buy anyway. The planner therefore uses the e
 *leave out* the top-scoring share and finds the share that maximises net value
 (`src/serving/campaign.py`). The offer effect is an assumption to measure with an A/B test.
 
+## Advanced ML (steps 12-16)
+
+Six extensions beyond the main study. Each one is judged on the same test weeks as RQ1, with
+paired bootstrap tests and Holm correction, and shown on the dashboard page **Advanced ML**.
+
+| Step | Question | Method | Main outputs |
+|---|---|---|---|
+| 12 | Can the engine say "unsure" with a guarantee? | Class-conditional split conformal prediction, calibrated on validation | `conformal`, `conformal_weekly` |
+| 12 | Do ML and DL models make different mistakes? | Stacked generalisation: logistic meta-model on validation scores | `stacking`, `stacking_tests`, `error_overlap` |
+| 13 | Does the model decay, and does retraining fix it? | Monthly deployment replay: frozen vs expanding vs sliding windows | `retraining`, `retraining_tests` |
+| 14 | Do learned representations help? | item2vec (PPMI-SVD of co-views) and LLM text embeddings as features | `embeddings_ablation`, `embeddings_tests` |
+| 15 | How much is tuning worth? | Optuna TPE on the validation weeks, confirmed with 3 seeds on test | `tuning`, `tuning_trials`, `tuning_importance` |
+| 16 | Does attention beat recurrence? | Transformer encoder vs GRU on the same click sequences | `transformer`, `transformer_tests`, `transformer_attention` |
+
+```bash
+.venv/bin/python scripts/12_conformal_stacking.py --mode full --set data.session_sample_fraction=0.1
+```
+```bash
+.venv/bin/python scripts/13_drift_retraining.py --mode full --set data.session_sample_fraction=0.1
+```
+```bash
+.venv/bin/python scripts/14_embeddings.py --mode full --set data.session_sample_fraction=0.1
+```
+```bash
+.venv/bin/python scripts/15_tune.py --mode full --set data.session_sample_fraction=0.1
+```
+```bash
+.venv/bin/python scripts/16_transformer.py --mode full --set data.session_sample_fraction=0.1
+```
+
+Step 14 adds the text embeddings only when `ollama pull nomic-embed-text` has been run. Steps 12
+and 16 add no models to the RQ1 tables: the Transformer is logged as experiment
+`rq6_transformer` and the tuned models as `rq7_tuned`.
+
+## AI analyst assistant (LLM + RAG)
+
+The **Analyst assistant** page (dashboard section *AI*) answers questions about the models,
+results, data and monitoring with retrieval-augmented generation:
+
+- **Knowledge base** (`src/llm/corpus.py`): the report, model and data cards, report updates and
+  this README split into passages, plus fact sheets generated from every result table.
+- **Retrieval** (`src/llm/retrieval.py`): BM25, embeddings (`nomic-embed-text` via Ollama) and a
+  hybrid using reciprocal rank fusion.
+- **Generation** (`src/llm/providers.py`): an open model running locally in Ollama
+  (`llama3.1:8b` by default; any pulled model such as `qwen3:14b` can be picked), told to
+  answer only from the sources and cite them as [S1]. Nothing leaves the computer and no
+  API key is needed.
+- **Checks** (`src/llm/rag.py`): every citation must exist and every number must appear in the
+  sources at the precision quoted. The Live scoring page uses the same checks for its
+  "Explain in plain English" button.
+- **Evaluation** (`scripts/11_rag_eval.py`): hand-written and table-generated questions with
+  known answers; recall@k and MRR per retriever, and correctness, abstention, grounding and
+  latency per model.
+
+Setup (all optional; without a model the assistant still shows the best sources):
+
+```bash
+cp .env.example .env
+```
+```bash
+ollama pull llama3.1:8b
+```
+```bash
+ollama pull nomic-embed-text
+```
+
+Then evaluate (compares the local models on the same questions):
+
+```bash
+.venv/bin/python scripts/11_rag_eval.py --mode full --set data.session_sample_fraction=0.1 --models llama3.1:8b qwen3:14b
+```
+
 ## REST API and Docker
 
 ```bash
