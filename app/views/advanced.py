@@ -19,12 +19,37 @@ POLICY = {"frozen": "Frozen (Oct–Dec)", "expanding": "Retrain on all past", "w
           "window_1": "Retrain on last month"}
 
 
+def ptxt(p: float) -> str:
+    """Holm p-value as text: tiny values are shown as "< 0.001", not "0.00"."""
+    return "< 0.001" if p < 0.001 else f"= {p:.3f}"
+
+
+def gain_chart(labels: list[str], t: pl.DataFrame, key: str, title: str) -> None:
+    """Horizontal bars of a paired difference with its 95% CI; green = significant after Holm."""
+    fig = go.Figure(go.Bar(
+        y=[f"{lab}   {d:+.4f}" for lab, d in zip(labels, t["diff"])], x=t["diff"], orientation="h",
+        error_x=dict(type="data", symmetric=False, array=(t["upper"] - t["diff"]).to_list(),
+                     arrayminus=(t["diff"] - t["lower"]).to_list(), color=ink["muted"], thickness=1.5, width=6),
+        marker=dict(color=[ui.STATUS["good"] if sg else ink["muted"] for sg in t["significant"]], cornerradius=4),
+        hovertemplate="%{y}<br>95% CI %{customdata[0]:+.4f} to %{customdata[1]:+.4f}<extra></extra>",
+        customdata=list(zip(t["lower"], t["upper"]))))
+    ui.style(fig, height=70 + 46 * t.height, legend=False, left=230)
+    fig.update_xaxes(title=title, zeroline=True, zerolinecolor=ink["text"], zerolinewidth=1.5)
+    fig.update_yaxes(autorange="reversed", showgrid=False)
+    ui.show(fig, key=key)
+    st.caption("Bar = gain on the test weeks, line = 95% bootstrap CI. Green: significant after the Holm correction "
+               "for testing several options at once; the CI line is not corrected, so a grey bar's line can stay "
+               "just above 0.")
+
+
 def verdict(sig: bool, diff: float) -> str:
     if sig:
         return ":green-badge[significant gain]" if diff > 0 else ":red-badge[significantly worse]"
     return ":gray-badge[no significant difference]"
 
 
+st.caption(f":material/tune: Showing results **after {K} clicks**. Change the decision point (3, 5 or 10 clicks) "
+           "in the sidebar; tuning and drift were run at 5 clicks only.")
 tabs = st.tabs(["Transformer vs GRU", "Tuning (Optuna)", "Stacked ensembles", "Embeddings",
                 "Conformal prediction", "Drift & retraining"])
 
@@ -45,7 +70,7 @@ with tabs[0]:
         if tt is not None:
             for r in ui.per_k(tt).iter_rows(named=True):
                 st.markdown(f"Transformer vs **{ui.label(r['vs'])}** after {K} clicks: {r['diff']:+.4f} PR-AUC "
-                            f"(95% CI {r['lower']:+.4f} to {r['upper']:+.4f}, Holm p = {r['p_holm']:.2f}) "
+                            f"(95% CI {r['lower']:+.4f} to {r['upper']:+.4f}, Holm p {ptxt(r['p_holm'])}) "
                             + verdict(r["significant"], r["diff"]))
         if ta is not None:
             a = ui.per_k(ta)
@@ -57,8 +82,12 @@ with tabs[0]:
             fig.update_yaxes(tickformat=".0%", title="Share of attention")
             st.subheader("Which clicks the Transformer looks at", anchor=False)
             ui.show(fig, key="attn")
-            st.caption("Mean attention of the [CLS] token on each click, last layer, test visits. A rising profile "
-                       "means the most recent clicks matter most.")
+            top = a.sort("attention", descending=True).row(0, named=True)
+            last = a.sort("position").row(-1, named=True)
+            focus = (f"the latest click, {top['position']} ({top['attention']:.0%})" if top["position"] == last["position"]
+                     else f"click {top['position']} ({top['attention']:.0%}); the latest click gets {last['attention']:.0%}")
+            st.caption(f"Mean attention of the [CLS] token on each click (last layer, test visits). The model looks "
+                       f"most at {focus}. An even split would give {1 / a.height:.0%} each.")
 
 # --------------------------------------------------------------------------- tuning
 with tabs[1]:
@@ -72,7 +101,7 @@ with tabs[1]:
         for r in tu.iter_rows(named=True):
             st.markdown(f"**{ui.label(r['model'])}** (K={r['k']}, {r['trials']} trials): default "
                         f"{r['default_test_mean']:.4f} → tuned **{r['tuned_test_mean']:.4f}** "
-                        f"(paired diff {r['diff']:+.4f}, Holm p = {r['p_holm']:.2f}) " + verdict(r["significant"], r["diff"]))
+                        f"(paired diff {r['diff']:+.4f}, Holm p {ptxt(r['p_holm'])}) " + verdict(r["significant"], r["diff"]))
         left, right = st.columns([1.3, 1], gap="large")
         if trials is not None:
             with left:
@@ -110,19 +139,8 @@ with tabs[2]:
         names = {"stack_ml": "ML models (Merve)", "stack_dl": "DL models (Karan)", "stack_all": "All six models",
                  "mean_logit_all": "Average of logits", "mean_rank_all": "Average of ranks"}
         if t is not None and t.height:
-            fig = go.Figure(go.Bar(
-                y=[names.get(x, x) for x in t["ensemble"]], x=t["diff"], orientation="h",
-                error_x=dict(type="data", symmetric=False, array=(t["upper"] - t["diff"]).to_list(),
-                             arrayminus=(t["diff"] - t["lower"]).to_list(), color=ink["muted"]),
-                marker=dict(color=[ui.STATUS["good"] if sg else ink["muted"] for sg in t["significant"]], cornerradius=4),
-                text=[f"{d:+.4f}" for d in t["diff"]], textposition="outside", cliponaxis=False,
-                textfont=dict(color=ink["text"], size=11)))
-            ui.style(fig, height=300, legend=False, left=170)
-            fig.update_xaxes(title=f"PR-AUC gain over {ui.label(t['vs'][0])} (95% CI)", zeroline=True,
-                             zerolinecolor=ink["muted"])
-            fig.update_yaxes(autorange="reversed", showgrid=False)
-            ui.show(fig, key="stack")
-            st.caption("Green: significant after Holm correction.")
+            gain_chart([names.get(x, x) for x in t["ensemble"]], t, "stack",
+                       f"PR-AUC gain over the best single model, {ui.label(t['vs'][0])}")
         if ov is not None:
             o = ui.per_k(ov).sort("missed_by_both", descending=True)
             with st.expander("Do the models miss the same buyers?"):
@@ -146,20 +164,22 @@ with tabs[3]:
         if info.get("note"):
             st.caption(f":material/info: {info['note']}")
         m = ui.per_k(ea).group_by("feature_set").agg(pl.col("test_pr_auc").mean(), pl.col("test_pr_auc").std().alias("sd"))
-        order = [x for x in ["base", "item2vec", "text", "item2vec+text"] if x in m["feature_set"].to_list()]
-        m = m.with_columns(pl.col("feature_set").cast(pl.Enum(order))).sort("feature_set")
-        fig = go.Figure(go.Bar(x=m["feature_set"].cast(pl.String), y=m["test_pr_auc"],
-                               error_y=dict(type="data", array=m["sd"].fill_null(0).to_list(), color=ink["muted"]),
-                               marker=dict(color=pal[0], cornerradius=4), text=[f"{v:.4f}" for v in m["test_pr_auc"]],
-                               textposition="outside", cliponaxis=False, textfont=dict(color=ink["text"], size=11)))
-        ui.style(fig, height=300, legend=False)
-        lo = float(m["test_pr_auc"].min())
-        fig.update_yaxes(range=[lo * 0.97, float(m["test_pr_auc"].max()) * 1.02], title="Test PR-AUC (LightGBM)")
-        ui.show(fig, key="emb")
-        if et is not None:
-            for r in ui.per_k(et).iter_rows(named=True):
-                st.markdown(f"+{r['feature_set']} vs base after {K} clicks: {r['diff']:+.4f} "
-                            f"(Holm p = {r['p_holm']:.2f}) " + verdict(r["significant"], r["diff"]))
+        base = m.filter(pl.col("feature_set") == "base")
+        if base.height:
+            st.metric(f"LightGBM with the base features, after {K} clicks", f"{base['test_pr_auc'][0]:.4f} PR-AUC",
+                      "mean of 3 seeds", delta_color="off", delta_arrow="off")
+        if et is not None and ui.per_k(et).height:
+            e = ui.per_k(et)
+            labs = {"item2vec": "+ item2vec (behaviour)", "text": "+ text (language model)",
+                    "item2vec+text": "+ both"}
+            gain_chart([labs.get(x, x) for x in e["feature_set"]], e, "emb", "PR-AUC gain over the base features")
+            with st.expander("Exact numbers"):
+                st.dataframe(m.join(e.select("feature_set", "diff", "lower", "upper", "p_holm", "significant"),
+                                    on="feature_set", how="left").sort("test_pr_auc").select(
+                    pl.col("feature_set").alias("Features"), pl.col("test_pr_auc").round(4).alias("Test PR-AUC"),
+                    pl.col("sd").round(4).alias("SD (seeds)"), pl.col("diff").round(4).alias("Gain vs base"),
+                    pl.col("p_holm").round(4).alias("Holm p"), pl.col("significant").alias("Significant")),
+                    hide_index=True, width="stretch")
 
 # --------------------------------------------------------------------------- conformal
 with tabs[4]:
@@ -236,8 +256,11 @@ with tabs[5]:
         fig.update_xaxes(type="category")
         ui.show(fig, key="rt")
         st.caption("PR-AUC also moves with each month's buyer rate; lift divides that out.")
+        st.caption("January 2020 is the first month scored: the 'all past' and 'last 3 months' models are then "
+                   "trained on the same Oct–Dec data as the frozen model, so their difference is exactly 0.")
         if rtt is not None:
             t = rtt.with_columns(pl.col("policy").replace_strict(POLICY, default=pl.col("policy")))
             st.dataframe(t.select("month", pl.col("policy").alias("Policy vs frozen"), pl.col("diff").round(4).alias("PR-AUC diff"),
-                                  pl.col("p_holm").round(3).alias("Holm p"), pl.col("significant").alias("Significant")),
+                                  pl.col("p_holm").map_elements(lambda p: ptxt(p).lstrip("= "), return_dtype=pl.String).alias("Holm p"),
+                                  pl.col("significant").alias("Significant")),
                          hide_index=True, width="stretch")
