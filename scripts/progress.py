@@ -1,4 +1,4 @@
-"""Show how far the long experiment runs (steps 11, 14, 15, 16) have got.
+"""Show how far the long experiment runs (steps 11, 14, 15, 16, 17) have got.
 
 Reads the log files in ``results/runs/`` and the list of running processes; it changes
 nothing, so it is safe to run at any time, as often as you like.
@@ -24,6 +24,7 @@ RUNS = ROOT / "results" / "runs"
 
 # step, script, log, what it does
 STEPS = [
+    ("17", "17_user_history.py", "user_history.log", "User history (G6) vs session-only features"),
     ("16", "16_transformer.py", "transformer.log", "Transformer vs GRU (3 K values x 3 seeds)"),
     ("15", "15_tune.py", "tuning.log", "Optuna tuning: LightGBM 40, MLP 15, GRU 10 trials"),
     ("14", "14_embeddings.py", "embeddings.log", "item2vec + text embeddings as features"),
@@ -101,6 +102,8 @@ def show() -> None:
             frac, detail = transformer(log, st == "running")
         elif step == "15":
             frac, detail = tuning(log, st == "running")
+        elif step == "17":
+            frac, detail = stages(log, 5, "stages (sessions, G6, K=3, K=5, K=10)")
         elif step == "14":
             frac, detail = stages(log, 5, "stages (item2vec, text, K=3, K=5, K=10)")
         else:

@@ -1,0 +1,19 @@
+{
+  "mode": "full",
+  "window_days": 30,
+  "history_source": "data/full100/interim/events_full.parquet",
+  "features": [
+    "uh_prior_sessions",
+    "uh_prior_purchase_sessions",
+    "uh_prior_cart_sessions",
+    "uh_prior_purchase_rate",
+    "uh_days_since_last_session",
+    "uh_days_since_last_purchase",
+    "uh_is_returning"
+  ],
+  "returning_share_test": {
+    "3": 0.769382468073451,
+    "5": 0.7802499619476061,
+    "10": 0.7928800713007311
+  }
+}

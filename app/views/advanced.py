@@ -1,4 +1,4 @@
-"""Advanced machine learning: Transformer, tuning, stacking, embeddings, conformal prediction, drift."""
+"""Advanced machine learning: Transformer, tuning, stacking, embeddings, user history, conformal prediction, drift."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ import ui
 s, K = ui.store(), ui.k()
 ink, pal = ui.INK[ui.theme()], ui.SERIES[ui.theme()]
 ui.page_header("Advanced ML",
-               "Six extensions beyond the main study, each tested on the same test weeks with paired "
+               "Seven extensions beyond the main study, each tested on the same test weeks with paired "
                "bootstrap tests: does it really help, and by how much?", rq="Models")
 
 POLICY = {"frozen": "Frozen (Oct–Dec)", "expanding": "Retrain on all past", "window_3": "Retrain on last 3 months",
@@ -50,7 +50,7 @@ def verdict(sig: bool, diff: float) -> str:
 
 st.caption(f":material/tune: Showing results **after {K} clicks**. Change the decision point (3, 5 or 10 clicks) "
            "in the sidebar; tuning and drift were run at 5 clicks only.")
-tabs = st.tabs(["Transformer vs GRU", "Tuning (Optuna)", "Stacked ensembles", "Embeddings",
+tabs = st.tabs(["Transformer vs GRU", "Tuning (Optuna)", "Stacked ensembles", "Embeddings", "User history",
                 "Conformal prediction", "Drift & retraining"])
 
 # --------------------------------------------------------------------------- transformer
@@ -181,8 +181,56 @@ with tabs[3]:
                     pl.col("p_holm").round(4).alias("Holm p"), pl.col("significant").alias("Significant")),
                     hide_index=True, width="stretch")
 
-# --------------------------------------------------------------------------- conformal
+# --------------------------------------------------------------------------- user history
 with tabs[4]:
+    ha, ht, hs = s.csv("user_history_ablation"), s.csv("user_history_tests"), s.csv("user_history_segments")
+    info = s.json("user_history_summary") or {}
+    if ha is None:
+        ui.missing("user-history results", "17_user_history.py")
+    else:
+        w = info.get("window_days", 30)
+        st.markdown(f"**G6 user history**: what the same user did in **earlier sessions of the last {w} days**: "
+                    "how many visits, how many bought or added to cart, their purchase rate and days since the last "
+                    "visit and purchase. Only sessions that *ended before this visit started* count, read from the "
+                    "full event log (all sessions, not just the 10 % sample). Added to LightGBM's G1–G5 features.")
+        m = ui.per_k(ha).group_by("feature_set").agg(pl.col("test_pr_auc").mean(), pl.col("test_pr_auc").std().alias("sd"))
+        get = {r["feature_set"]: r for r in m.iter_rows(named=True)}
+        share = (info.get("returning_share_test") or {}).get(str(K))
+        c1, c2, c3 = st.columns(3)
+        if "base" in get:
+            c1.metric("G1–G5 (session only)", f"{get['base']['test_pr_auc']:.4f}", "mean of 3 seeds",
+                      delta_color="off", delta_arrow="off")
+        if "history" in get:
+            c2.metric("G1–G6 (+ user history)", f"{get['history']['test_pr_auc']:.4f}", "mean of 3 seeds",
+                      delta_color="off", delta_arrow="off")
+        if share is not None:
+            c3.metric("Returning users in the test weeks", f"{share:.0%}", f"had a visit in the last {w} days",
+                      delta_color="off", delta_arrow="off")
+        t = ui.per_k(ht) if ht is not None else None
+        if t is not None and t.height:
+            r = t.row(0, named=True)
+            st.markdown(f"Gain from user history: **{r['diff']:+.4f} PR-AUC**, Holm p {ptxt(r['p_holm'])} "
+                        f"{verdict(r['significant'], r['diff'])}")
+        if hs is not None and ui.per_k(hs).height:
+            g = ui.per_k(hs).sort("segment")
+            fig = go.Figure()
+            for i, (col, lab) in enumerate([("pr_auc_base", "G1–G5"), ("pr_auc_history", "G1–G6")]):
+                fig.add_trace(go.Bar(x=[f"{x.capitalize()} users" for x in g["segment"]], y=g[col], name=lab,
+                                     marker=dict(color=pal[i], cornerradius=4),
+                                     hovertemplate=lab + ": %{y:.4f}<extra></extra>"))
+            ui.style(fig, height=300, barmode="group")
+            fig.update_yaxes(title="Test PR-AUC")
+            ui.show(fig, key="uh_seg")
+            st.caption("Each group has its own buyer rate, so compare the two bars within a group, not across groups.")
+            with st.expander("Exact numbers"):
+                st.dataframe(g.select(pl.col("segment").alias("Users"), pl.col("sessions").alias("Test visits"),
+                                      pl.col("positive_rate").round(3).alias("Buyer rate"),
+                                      pl.col("pr_auc_base").round(4).alias("G1–G5"),
+                                      pl.col("pr_auc_history").round(4).alias("G1–G6"),
+                                      pl.col("gain").round(4).alias("Gain")), hide_index=True, width="stretch")
+
+# --------------------------------------------------------------------------- conformal
+with tabs[5]:
     cf, cw = s.csv("conformal"), s.csv("conformal_weekly")
     if cf is None:
         ui.missing("conformal results", "12_conformal_stacking.py")
@@ -232,7 +280,7 @@ with tabs[4]:
             ui.show(fig, key="cpw")
 
 # --------------------------------------------------------------------------- drift
-with tabs[5]:
+with tabs[6]:
     rt, rtt = s.csv("retraining"), s.csv("retraining_tests")
     if rt is None:
         ui.missing("retraining results", "13_drift_retraining.py")

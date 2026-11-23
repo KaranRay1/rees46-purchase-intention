@@ -1,0 +1,4 @@
+k,min_gap_hours,test_pr_auc_history,test_pr_auc_base,gain,seed
+5,0,0.3885,0.3330,0.0555,42
+5,1,0.3809,0.3330,0.0479,42
+5,24,0.3694,0.3330,0.0364,42

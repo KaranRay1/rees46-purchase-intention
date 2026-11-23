@@ -109,3 +109,12 @@ def test_embeddings_script(trained):  # noqa: F811
                                        "--set", "models.lightgbm.n_estimators=50"])
     ab = ResultStore(trained).csv("embeddings_ablation")
     assert {"base", "item2vec"} <= set(ab["feature_set"].to_list())
+
+
+def test_user_history_script(trained):  # noqa: F811
+    _run("17_user_history.py", trained, ["--n-resamples", "20", "--ks", "5",
+                                         "--set", "models.lightgbm.n_estimators=50"])
+    s = ResultStore(trained)
+    assert set(s.csv("user_history_ablation")["feature_set"].to_list()) == {"base", "history"}
+    assert set(s.csv("user_history_segments")["segment"].to_list()) <= {"new", "returning"}
+    assert s.json("user_history_summary")["window_days"] == 30
