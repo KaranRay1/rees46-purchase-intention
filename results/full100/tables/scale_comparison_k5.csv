@@ -1,0 +1,5 @@
+model,pr_auc_10pct,pr_auc_100pct,change,roc_auc_10pct,roc_auc_100pct,train_sec_10pct,train_sec_100pct,seeds_10pct,seeds_100pct
+gru,0.3358,0.3371,+0.0014,0.7557,0.7628,249,1863,3,1
+random_forest,0.3369,0.3358,-0.0010,0.7623,0.7653,34,394,3,1
+lightgbm,0.3331,0.3321,-0.0010,0.7615,0.7641,6,73,3,1
+logistic_regression,0.3250,0.3258,+0.0008,0.7590,0.7601,1,11,3,1

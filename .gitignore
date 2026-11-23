@@ -12,3 +12,8 @@ results/runs/*
 
 # Local secrets (Claude API key, LLM settings): never commit
 .env
+
+# Full-scale validation workspace (scripts/run_full_scale.sh): data and runs are large
+data/full100/
+results/full100/runs/
+results/full100/pipeline.log

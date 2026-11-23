@@ -1,0 +1,41 @@
+{
+  "alpha": 0.05,
+  "test": "paired bootstrap on test PR-AUC, Holm-adjusted within the confirmatory family",
+  "confirmatory_tests": 3,
+  "H1a_trees_beat_logistic_regression": {
+    "verdict": "supported",
+    "significant_wins": "2/2",
+    "evidence": [
+      {
+        "k": 5,
+        "model": "random_forest",
+        "diff": 0.010047731869027132,
+        "p_holm": 0.0,
+        "significant_better": true
+      },
+      {
+        "k": 5,
+        "model": "lightgbm",
+        "diff": 0.0063358414952778275,
+        "p_holm": 0.0,
+        "significant_better": true
+      }
+    ]
+  },
+  "H1b_deep_tabular_beat_logistic_regression": {
+    "verdict": "not tested",
+    "significant_wins": "0/0",
+    "evidence": []
+  },
+  "H1c_gru_matches_best_aggregated_at_max_k": {
+    "verdict": "supported",
+    "k": 5,
+    "best_aggregated_model": "random_forest",
+    "diff": 0.0013023377452507923,
+    "ci": [
+      0.0006370225568852243,
+      0.0019491582810968896
+    ],
+    "p_holm": 0.0
+  }
+}

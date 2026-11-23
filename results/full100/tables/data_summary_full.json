@@ -1,0 +1,82 @@
+{
+  "mode": "full",
+  "cleaning": {
+    "mode": "full",
+    "sources": [
+      "2019-Oct.parquet",
+      "2019-Nov.parquet",
+      "2019-Dec.parquet",
+      "2020-Jan.parquet",
+      "2020-Feb.parquet",
+      "2020-Mar.parquet",
+      "2020-Apr.parquet"
+    ],
+    "rows_in": 411709736,
+    "removed": {
+      "unparseable_event_time": 0,
+      "null_session": 226,
+      "session_sampling": 0,
+      "unknown_event_type": 0,
+      "non_positive_or_null_price": 714464,
+      "duplicate_rows": 1383701,
+      "over_long_sessions": 8748982
+    },
+    "category_harmonisation": {
+      "products": 381931,
+      "products_labelled": 223890
+    },
+    "rows_out": 400862363,
+    "sessions_in": 89693595,
+    "sessions_out": 88710607,
+    "purchase_sessions_out": 5267613
+  },
+  "sessionize": {
+    "5": {
+      "sessions_total": 88710607,
+      "too_short": 68865706,
+      "purchase_within_prefix": 895343,
+      "eligible": 18949558,
+      "positives": 1826903,
+      "k": 5,
+      "positive_rate": 0.09640873945450337,
+      "mode": "full"
+    }
+  },
+  "split_cutoffs": {
+    "computed_from_k": 5,
+    "n_sessions": 18949558,
+    "val_start": "2020-03-02T07:47:50+00:00",
+    "test_start": "2020-04-05T15:44:37+00:00"
+  },
+  "splits": {
+    "5": {
+      "k": 5,
+      "sessions_kept": 18945589,
+      "purged_boundary_sessions": 3969,
+      "train": {
+        "sessions": 13262625,
+        "fraction": 0.7000376182550988,
+        "positives": 1201273,
+        "positive_rate": 0.09057580984156606,
+        "first_start": "2019-10-01T00:00:01+00:00",
+        "last_start": "2020-03-02T07:46:21+00:00"
+      },
+      "val": {
+        "sessions": 2840530,
+        "fraction": 0.14993094170891177,
+        "positives": 339176,
+        "positive_rate": 0.11940588552136397,
+        "first_start": "2020-03-02T07:47:50+00:00",
+        "last_start": "2020-04-05T15:42:31+00:00"
+      },
+      "test": {
+        "sessions": 2842434,
+        "fraction": 0.15003144003598937,
+        "positives": 285977,
+        "positive_rate": 0.10060989982529057,
+        "first_start": "2020-04-05T15:44:37+00:00",
+        "last_start": "2020-04-30T23:58:21+00:00"
+      }
+    }
+  }
+}
