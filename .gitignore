@@ -17,3 +17,8 @@ results/runs/*
 data/full100/
 results/full100/runs/
 results/full100/pipeline.log
+
+# Synthetic trial run (scripts/try_synthetic.sh) and the share zip (scripts/make_share_zip.sh)
+data/synthetic_try/
+results/synthetic_try/
+dist/

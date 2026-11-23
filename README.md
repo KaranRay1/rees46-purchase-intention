@@ -103,6 +103,10 @@ them back on for a dataset with removals.
 
 ## Setup
 
+**Sharing or trying the project without the dataset:** see [HOW_TO_RUN.md](HOW_TO_RUN.md).
+`bash scripts/try_synthetic.sh` runs the whole pipeline on generated data in about a minute, and
+`bash scripts/make_share_zip.sh` builds a zip of the project without the data (`dist/`).
+
 You need Python **3.12**. Everything runs on CPU; no GPU is needed.
 
 ```bash
