@@ -4,8 +4,14 @@
 Karan Ray and Merve Kara, NCI MSc in Artificial Intelligence, Machine Learning.
 
 This folder contains the full code, the result tables and figures, the trained demo models
-and the documents. **The REES46 dataset is not included**: it is 53 GB, and it is published
-on Kaggle under its own licence. You don't need it to run anything in sections 1 to 4.
+and the documents. **The REES46 dataset is not included** (53 GB). It is public, and
+`scripts/00_download_data.py` fetches it straight from the source when you need it (section 5).
+You don't need it for anything in sections 1 to 4.
+
+**Dataset:** REES46 *eCommerce behavior data from a multi-category store*, Oct 2019 – Apr 2020
+- dataset page: <https://www.kaggle.com/datasets/mkechinov/ecommerce-behavior-data-from-multi-category-store>
+- direct monthly files (no login): `https://data.rees46.com/datasets/marketplace/2019-Oct.csv.gz` …
+  `2020-Apr.csv.gz`
 
 | You want to… | Needs the dataset? | Time |
 |---|---|---|
@@ -54,7 +60,7 @@ models for every K, their test-period scores and the product catalogue. Every pa
 model comparison, live prediction, campaign planner, monitoring, explanations and Advanced ML.
 
 The **Analyst assistant** page (local LLM + RAG) also needs [Ollama](https://ollama.com) with
-the models we used. Without Ollama, the page still answers by retrieval only.
+the models we used. Without Ollama, the page still answers by retrieval only. With a model, *Agent* mode lets it call tools: read result tables, compare models, score a visit you describe and value a campaign.
 
 ```bash
 ollama pull llama3.1:8b
@@ -90,9 +96,18 @@ script by hand, with `--mode synthetic`.
 
 ## 5. Reproduce the real results (needs the dataset)
 
-1. Download *eCommerce behavior data from a multi-category store* (REES46) from Kaggle,
-   Oct 2019 to Apr 2020, and put the seven monthly CSVs in `data/raw/` with their original
-   names (`2019-Oct.csv` … `2020-Apr.csv`).
+1. Download the data with one command. It streams each month from REES46's public server,
+   unzips it on the fly into `data/raw/`, skips files already there, and checks free disk space first:
+
+```bash
+.venv/bin/python scripts/00_download_data.py --mode dev
+```
+
+   `--mode dev` fetches October 2019 only (1.7 GB download, ~5.7 GB on disk): enough to run every
+   step with `--mode dev`. `--mode full` fetches all seven months (17.7 GB download, ~53 GB on
+   disk). `--check` only tests the links. If the server is ever unavailable, download the CSVs
+   from the Kaggle page above and put them in `data/raw/` with their original names.
+
 2. Run the pipeline; see **Running the study** in `README.md`. The headline results use a 10 %
    session sample:
 
@@ -100,7 +115,7 @@ script by hand, with `--mode synthetic`.
 .venv/bin/python scripts/01_prepare_data.py --mode full --set data.session_sample_fraction=0.1
 ```
 
-   followed by scripts 02 to 19 with the same `--set`. A machine with 24 GB of RAM is
+   followed by scripts 02 to 20 with the same `--set`. A machine with 24 GB of RAM is
    enough. `scripts/run_full_scale.sh` repeats the main study on 100 % of sessions
    (~32 GB peak memory).
 
@@ -111,7 +126,7 @@ script by hand, with `--mode synthetic`.
 | Folder | What it holds |
 |---|---|
 | `src/` | the library: data, features, models, evaluation, serving, LLM/RAG |
-| `scripts/` | the numbered pipeline steps 01 to 19 |
+| `scripts/` | the numbered pipeline steps 01 to 20 |
 | `app/` | the Streamlit dashboard |
 | `results/tables/`, `results/figures/` | every result in the report (`*_full` = REES46 run) |
 | `results/full100/` | the 100 % full-data validation |

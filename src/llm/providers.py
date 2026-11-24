@@ -124,6 +124,32 @@ class OllamaProvider:
                           int(body.get("prompt_eval_count", 0)), int(body.get("eval_count", 0)))
 
 
+    def chat(self, messages: list[dict], tools: list[dict] | None = None, max_tokens: int = 900) -> dict:
+        """One chat turn with optional tool definitions (Ollama function calling).
+
+        Returns the assistant message (``content`` and, when the model wants tools, ``tool_calls``)
+        plus ``seconds`` and token counts.
+        """
+        ok, why = self.available()
+        if not ok:
+            raise LLMError(why)
+        start = time.perf_counter()
+        body = {"model": self.model, "stream": False, "think": False, "messages": messages,
+                "options": {"temperature": self.temperature, "num_predict": max_tokens, "num_ctx": 12288}}
+        if tools:
+            body["tools"] = tools
+        try:
+            r = httpx.post(f"{self.host}/api/chat", timeout=300.0, json=body)
+            r.raise_for_status()
+            out = r.json()
+        except httpx.HTTPError as e:
+            raise LLMError(f"Ollama request failed: {e}") from e
+        msg = out.get("message", {})
+        return {"content": (msg.get("content") or "").strip(), "tool_calls": msg.get("tool_calls") or [],
+                "seconds": time.perf_counter() - start, "input_tokens": int(out.get("prompt_eval_count", 0)),
+                "output_tokens": int(out.get("eval_count", 0))}
+
+
 class OllamaEmbedder:
     """Sentence embeddings from Ollama, L2-normalised (cosine similarity = dot product)."""
 

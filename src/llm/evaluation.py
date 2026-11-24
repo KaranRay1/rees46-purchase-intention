@@ -130,7 +130,9 @@ def summarise_retrieval(per_q: pl.DataFrame) -> pl.DataFrame:
 # --------------------------------------------------------------------------- answers
 def _contains(answer: str, phrase: str) -> bool:
     if re.fullmatch(r"[-+]?\d[\d.,]*%?", phrase.strip()):
-        return any(number_matches(tok, phrase) for tok in numbers_in(answer))
+        # a quoted figure is right if it matches the expected one at either side's precision
+        # (0.010292 for an expected 0.010, or 0.336 for an expected 0.3358)
+        return any(number_matches(tok, phrase) or number_matches(phrase, tok) for tok in numbers_in(answer))
     return phrase.lower() in answer.lower()
 
 
@@ -190,3 +192,60 @@ def sample(questions: Sequence[Question], n: int | None, seed: int = 0) -> list[
             if by_tag[tag] and len(picked) < quota:
                 picked.append(by_tag[tag].pop(rng.randrange(len(by_tag[tag]))))
     return manual + picked
+
+
+# --------------------------------------------------------------------------- agent (step 20)
+def tool_questions(cfg: Mapping[str, Any]) -> list[Question]:
+    """Questions that need a tool (a table lookup, a calculation or a model run), with expected answers.
+
+    Plain RAG can only answer these if a passage happens to contain the figure, so they show what
+    the agent adds. Expected values come from the result tables or from running the same code.
+    """
+    from src.evaluation.business_value import monthly_scale
+    from src.serving.campaign import Offer, best_share, gain_table, suppression_value
+    from src.serving.results import ResultStore, test_predictions
+
+    import numpy as np
+
+    store = ResultStore(cfg)
+    out: list[Question] = []
+    seg = store.csv("segment_disparity")
+    if seg is not None:
+        for r in seg.filter((pl.col("model") == "gru") & pl.col("dimension").is_in(["price", "category"])).iter_rows(named=True):
+            what = "price level" if r["dimension"] == "price" else "product category"
+            out.append(Question(f"t_seg_{r['dimension']}_k{r['k']}",
+                                f"According to the segment analysis, which {what} does the GRU rank worst at K={r['k']}?",
+                                [], [[r["worst_segment"].split(" ", 1)[-1]]], origin="tool", tags=["segments"]))
+    uh = store.csv("user_history_tests")
+    if uh is not None:
+        for r in uh.iter_rows(named=True):
+            out.append(Question(f"t_uh_k{r['k']}", f"By how much do the user-history features raise LightGBM's test "
+                                f"PR-AUC at K={r['k']} (primary seed)?", [],
+                                [[f"{r['diff']:.4f}", f"{r['diff']:.3f}"]], origin="tool", tags=["history"]))
+    info = store.json("business_value_summary") or {}
+    aov = float((info.get("offer") or {}).get("aov") or 300.0)
+    for k in (3, 5, 10):
+        pr = test_predictions(cfg, k, "gru")
+        if pr is None or not pr.height:
+            continue
+        offer = Offer(aov=aov, discount=0.2, uplift=0.01)
+        v = suppression_value(gain_table(pr["y_true"].to_numpy(), pr["score"].to_numpy(),
+                                         np.round(np.arange(0, 1.0001, 0.01), 2)), offer)
+        scale = monthly_scale(store.json("data_summary") or {}, k)[0]
+        net = best_share(v)["net"] * scale
+        out.append(Question(f"t_campaign_k{k}", f"What net value per month would the GRU discount campaign make at K={k} "
+                            "with a 20% discount if the offer converts 1% of non-buyers?", [],
+                            [[f"{net:,.0f}", f"{net:.0f}"]], origin="tool", tags=["campaign"]))
+    pairs = store.csv("rq1_pairwise_tests")
+    if pairs is not None:
+        alpha = float(cfg["evaluation"]["alpha"])
+        for r in pairs.filter(pl.col("model_a").is_in(["random_forest", "lightgbm"]) & (pl.col("model_b") == "gru")
+                              ).iter_rows(named=True):
+            sig = r["p_bootstrap_holm"] < alpha
+            out.append(Question(f"t_sig_{r['model_a']}_k{r['k']}",
+                                f"After the Holm correction, is the difference in PR-AUC between {LABEL[r['model_a']]} "
+                                f"and the GRU at K={r['k']} statistically significant?", [],
+                                [["significant"] if sig else ["not significant", "no significant", "not statistically",
+                                                              "isn't significant", "tie"]],
+                                origin="tool", tags=["tests"]))
+    return out

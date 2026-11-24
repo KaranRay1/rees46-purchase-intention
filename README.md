@@ -133,9 +133,17 @@ temporary folders, so they don't need the dataset:
 
 ### Data
 
-REES46 "eCommerce behavior data from a multi-category store", Oct 2019 – Apr 2020. It's
-on Kaggle (2019-Oct and 2019-Nov); the dataset page links to the remaining months. Put
-the monthly CSVs, unzipped and with their original names, in `data/raw/`:
+REES46 "eCommerce behavior data from a multi-category store", Oct 2019 – Apr 2020
+([Kaggle page](https://www.kaggle.com/datasets/mkechinov/ecommerce-behavior-data-from-multi-category-store);
+the monthly files are also served without login from `https://data.rees46.com/datasets/marketplace/`).
+Download them with:
+
+```bash
+.venv/bin/python scripts/00_download_data.py --mode dev
+```
+
+(`--mode full` for all seven months, ~53 GB on disk.) The script puts the unzipped CSVs, with their
+original names, in `data/raw/`:
 
 ```
 data/raw/2019-Oct.csv      ← enough for --mode dev
@@ -331,7 +339,7 @@ visitors is worse than random: they buy anyway. The planner therefore uses the e
 
 ## Advanced ML (steps 12-16)
 
-Nine extensions beyond the main study. Each one is judged on the same test weeks as RQ1, with
+Ten extensions beyond the main study. Each one is judged on the same test weeks as RQ1, with
 paired bootstrap tests and Holm correction, and shown on the dashboard page **Advanced ML**.
 
 | Step | Question | Method | Main outputs |
@@ -345,6 +353,7 @@ paired bootstrap tests and Holm correction, and shown on the dashboard page **Ad
 | 17 | Does knowing the user's past help? | G6 user history (earlier sessions in a 30-day window, from the full event log) added to LightGBM | `user_history_ablation`, `user_history_tests`, `user_history_segments` |
 | 18 | Which model earns the most? | Every model drives the same discount campaign; cutoff chosen on half the test visits, profit measured on the other half, paired bootstrap + Holm, discount x uplift sensitivity (shown on **Campaign planner**) | `business_value`, `business_value_tests`, `business_value_sensitivity` |
 | 19 | Does the model work, and treat visits, alike across groups? | Segment (fairness) analysis by category, price, cart, time of day, weekday/weekend and new/returning user: PR-AUC lift, calibration gap, flag rate, TPR/FPR at one global cutoff; GRU vs RF per segment (Holm) | `segment_metrics`, `segment_disparity`, `segment_tests` |
+| 20 | Does a tool-using agent beat plain RAG? | Local LLM agent (Ollama function calling) with six tools: docs search, table reading, model comparison, live session scoring, campaign valuation; scored against RAG on standard and tool-needing questions (shown on **Analyst assistant**) | `agent_eval_summary`, `agent_eval_answers` |
 
 ```bash
 .venv/bin/python scripts/12_conformal_stacking.py --mode full --set data.session_sample_fraction=0.1
@@ -369,6 +378,9 @@ paired bootstrap tests and Holm correction, and shown on the dashboard page **Ad
 ```
 ```bash
 .venv/bin/python scripts/19_segments.py --mode full --set data.session_sample_fraction=0.1
+```
+```bash
+.venv/bin/python scripts/20_agent_eval.py --mode full --set data.session_sample_fraction=0.1 --models llama3.1:8b qwen3:14b
 ```
 
 Step 14 adds the text embeddings only when `ollama pull nomic-embed-text` has been run. Step 17 reads user history from the full

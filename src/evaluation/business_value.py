@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Mapping
 
 import numpy as np
@@ -112,3 +113,15 @@ def paired_diff(da: np.ndarray, db: np.ndarray, a: float, b: float, confidence: 
     alpha = (1 - confidence) / 2
     return {"diff": a - b, "lower": float(np.quantile(d, alpha)), "upper": float(np.quantile(d, 1 - alpha)),
             "p_value": float(min(1.0, 2 * min(np.mean(d <= 0), np.mean(d >= 0))))}
+
+
+def monthly_scale(summary: dict, k: int) -> tuple[float, float, float]:
+    """(scale, test days, sample share): multiply a test-period value to get a month of the whole shop."""
+    sp = (summary.get("splits") or {}).get(str(k), {}).get("test")
+    days = 1.0
+    if sp:
+        days = max((datetime.fromisoformat(sp["last_start"]) - datetime.fromisoformat(sp["first_start"])
+                    ).total_seconds() / 86400, 1.0)
+    clean = summary.get("cleaning") or {}
+    sample = clean["sessions_out"] / clean["sessions_in"] if clean.get("sessions_in") else 1.0
+    return (30 / days) / sample, days, sample

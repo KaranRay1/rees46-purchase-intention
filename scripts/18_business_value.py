@@ -25,7 +25,6 @@ from __future__ import annotations
 
 import json
 import sys
-from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -34,7 +33,7 @@ from _common import base_parser, print_table, setup, stage  # noqa: E402
 import polars as pl  # noqa: E402
 from scipy.stats import spearmanr  # noqa: E402
 
-from src.evaluation.business_value import compare_models, paired_diff  # noqa: E402
+from src.evaluation.business_value import compare_models, monthly_scale, paired_diff  # noqa: E402
 from src.evaluation.statistics import holm  # noqa: E402
 from src.serving.campaign import Offer  # noqa: E402
 from src.serving.catalog import daily_profile  # noqa: E402
@@ -42,18 +41,6 @@ from src.serving.results import ResultStore, test_predictions  # noqa: E402
 
 MODELS = ["rule_based", "logistic_regression", "random_forest", "lightgbm", "mlp", "tabnet", "gru"]
 ENGINE = "gru"   # the deployed model (fastest of the top tier)
-
-
-def monthly_scale(summary: dict, k: int) -> tuple[float, float, float]:
-    """(scale, test days, sample share): multiply a test-period value to get a month of the whole shop."""
-    sp = (summary.get("splits") or {}).get(str(k), {}).get("test")
-    days = 1.0
-    if sp:
-        days = max((datetime.fromisoformat(sp["last_start"]) - datetime.fromisoformat(sp["first_start"])
-                    ).total_seconds() / 86400, 1.0)
-    clean = summary.get("cleaning") or {}
-    sample = clean["sessions_out"] / clean["sessions_in"] if clean.get("sessions_in") else 1.0
-    return (30 / days) / sample, days, sample
 
 
 def main(argv: list[str] | None = None) -> None:
