@@ -1,4 +1,4 @@
-"""Advanced machine learning: Transformer, tuning, stacking, embeddings, user history, conformal prediction, drift."""
+"""Advanced machine learning: Transformer, tuning, stacking, embeddings, user history, segments, conformal prediction, drift."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ import ui
 s, K = ui.store(), ui.k()
 ink, pal = ui.INK[ui.theme()], ui.SERIES[ui.theme()]
 ui.page_header("Advanced ML",
-               "Seven extensions beyond the main study, each tested on the same test weeks with paired "
+               "Eight extensions beyond the main study, each tested on the same test weeks with paired "
                "bootstrap tests: does it really help, and by how much?", rq="Models")
 
 POLICY = {"frozen": "Frozen (Oct–Dec)", "expanding": "Retrain on all past", "window_3": "Retrain on last 3 months",
@@ -51,7 +51,7 @@ def verdict(sig: bool, diff: float) -> str:
 st.caption(f":material/tune: Showing results **after {K} clicks**. Change the decision point (3, 5 or 10 clicks) "
            "in the sidebar; tuning and drift were run at 5 clicks only.")
 tabs = st.tabs(["Transformer vs GRU", "Tuning (Optuna)", "Stacked ensembles", "Embeddings", "User history",
-                "Conformal prediction", "Drift & retraining"])
+                "Segments & fairness", "Conformal prediction", "Drift & retraining"])
 
 # --------------------------------------------------------------------------- transformer
 with tabs[0]:
@@ -229,8 +229,79 @@ with tabs[4]:
                                       pl.col("pr_auc_history").round(4).alias("G1–G6"),
                                       pl.col("gain").round(4).alias("Gain")), hide_index=True, width="stretch")
 
-# --------------------------------------------------------------------------- conformal
+# --------------------------------------------------------------------------- segments & fairness
 with tabs[5]:
+    from src.evaluation.segments import DIMENSION_LABELS, SHORT_LABELS
+
+    sm, sd, stt = s.csv("segment_metrics"), s.csv("segment_disparity"), s.csv("segment_tests")
+    sinfo = s.json("segment_summary") or {}
+    if sm is None or not ui.per_k(sm).height:
+        ui.missing("segment results", "19_segments.py")
+    else:
+        st.markdown("The data has no personal attributes (age, gender, location), so fairness here means **consistency "
+                    "across groups of visits**: does the model rank buyers equally well in every group, and does it "
+                    "treat the groups alike? *Lift* = PR-AUC ÷ the group's buyer rate, so groups with more buyers "
+                    "don't look better just for that.")
+        g = ui.per_k(sm)
+        mods = ui.models_in(g)
+        eng = sinfo.get("engine", "gru")
+        c1, c2 = st.columns([1, 2])
+        model = c1.selectbox("Model", mods, index=mods.index(eng) if eng in mods else 0, key="seg_model",
+                             format_func=ui.label)
+        dims = [d for d in DIMENSION_LABELS if d in g["dimension"].unique().to_list()]
+        dim = c2.segmented_control("Group visits by", dims, default=dims[0], key="seg_dim", required=True,
+                                   format_func=lambda d: SHORT_LABELS[d], help=" · ".join(DIMENSION_LABELS.values()))
+        d = g.filter((pl.col("model") == model) & (pl.col("dimension") == dim)).sort("segment")
+        dd = ui.per_k(sd).filter((pl.col("model") == model) & (pl.col("dimension") == dim)) if sd is not None else None
+        if dd is not None and dd.height:
+            r = dd.row(0, named=True)
+            m = st.columns(3)
+            m[0].metric("Worst ÷ best lift", f"{r['lift_ratio']:.2f}", f"{r['worst_segment']} vs {r['best_segment']}",
+                        delta_color="off", delta_arrow="off", help="1.00 = the model ranks buyers equally well in every group.")
+            m[1].metric("Gap in buyers flagged (TPR)", f"{r['tpr_gap']:.1%}", "equal opportunity: 0 is equal",
+                        delta_color="off", delta_arrow="off")
+            if r["max_abs_calibration_gap"] is not None:
+                m[2].metric("Worst calibration error", f"{r['max_abs_calibration_gap']:.1%}",
+                            "predicted vs actual buyer rate", delta_color="off", delta_arrow="off")
+        f1 = go.Figure(go.Bar(
+            y=[f"{x}   ({br:.1%} buy)" for x, br in zip(d["segment"], d["base_rate"])], x=d["pr_auc_lift"],
+            orientation="h", marker=dict(color=pal[0], cornerradius=4),
+            customdata=list(zip(d["pr_auc"], d["n"])),
+            hovertemplate="%{y}<br>lift %{x:.2f}× · PR-AUC %{customdata[0]:.3f} · %{customdata[1]:,} visits<extra></extra>"))
+        ui.style(f1, height=70 + 34 * d.height, legend=False, left=230)
+        f1.update_xaxes(title="PR-AUC lift over the group's buyer rate (×)")
+        f1.update_yaxes(autorange="reversed", showgrid=False)
+        ui.show(f1, key="seg_lift")
+        f2 = go.Figure()
+        for i, (col, lab) in enumerate([("base_rate", "Buyer rate"), ("flag_rate", "Flagged as likely buyer")]):
+            f2.add_trace(go.Bar(x=d["segment"], y=d[col], name=lab, marker=dict(color=pal[i], cornerradius=4),
+                                hovertemplate=lab + ": %{y:.1%}<extra></extra>"))
+        ui.style(f2, height=300, barmode="group")
+        f2.update_yaxes(title="Share of the group's visits", tickformat=".0%")
+        ui.show(f2, key="seg_flag")
+        st.caption(f"One cutoff for everyone: the top {sinfo.get('flag_share', 0.13):.0%} of all visits by score are "
+                   "flagged. In the discount campaign a flagged visit gets **no** discount, so a group flagged more "
+                   "often than its buyer rate suggests receives fewer offers.")
+        tt = ui.per_k(stt) if stt is not None and stt.height else None
+        if tt is not None and "significant" in tt.columns:
+            n_sig = int(tt["significant"].sum())
+            st.markdown(f"**ML vs DL in every group:** {ui.label(sinfo.get('engine', 'gru'))} vs "
+                        f"{ui.label(sinfo.get('rival', 'random_forest'))} differ significantly (Holm) in **{n_sig} of "
+                        f"{tt.height}** groups at {K} clicks"
+                        + (": " + ", ".join(f"{r['segment']} ({r['diff']:+.4f})"
+                                            for r in tt.filter(pl.col("significant")).iter_rows(named=True))
+                           if n_sig else "")
+                        + ".")
+        with st.expander("Exact numbers"):
+            st.dataframe(d.select(pl.col("segment").alias("Group"), pl.col("n").alias("Visits"),
+                                  pl.col("base_rate").round(3).alias("Buyer rate"), pl.col("pr_auc").round(3).alias("PR-AUC"),
+                                  pl.col("pr_auc_lift").round(2).alias("Lift"), pl.col("roc_auc").round(3).alias("ROC-AUC"),
+                                  pl.col("calibration_gap").round(3).alias("Calibration gap"),
+                                  pl.col("flag_rate").round(3).alias("Flagged"), pl.col("tpr").round(3).alias("TPR"),
+                                  pl.col("fpr").round(3).alias("FPR")), hide_index=True, width="stretch")
+
+# --------------------------------------------------------------------------- conformal
+with tabs[6]:
     cf, cw = s.csv("conformal"), s.csv("conformal_weekly")
     if cf is None:
         ui.missing("conformal results", "12_conformal_stacking.py")
@@ -280,7 +351,7 @@ with tabs[5]:
             ui.show(fig, key="cpw")
 
 # --------------------------------------------------------------------------- drift
-with tabs[6]:
+with tabs[7]:
     rt, rtt = s.csv("retraining"), s.csv("retraining_tests")
     if rt is None:
         ui.missing("retraining results", "13_drift_retraining.py")

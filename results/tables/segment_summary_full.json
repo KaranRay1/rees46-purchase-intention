@@ -1,0 +1,13 @@
+{
+  "mode": "full",
+  "flag_share": 0.13,
+  "min_size": 500,
+  "engine": "gru",
+  "rival": "random_forest",
+  "user_type_available": {
+    "3": true,
+    "5": true,
+    "10": true
+  },
+  "n_resamples": 500
+}

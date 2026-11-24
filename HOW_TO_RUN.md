@@ -100,7 +100,7 @@ script by hand, with `--mode synthetic`.
 .venv/bin/python scripts/01_prepare_data.py --mode full --set data.session_sample_fraction=0.1
 ```
 
-   followed by scripts 02 to 18 with the same `--set`. A machine with 24 GB of RAM is
+   followed by scripts 02 to 19 with the same `--set`. A machine with 24 GB of RAM is
    enough. `scripts/run_full_scale.sh` repeats the main study on 100 % of sessions
    (~32 GB peak memory).
 
@@ -111,7 +111,7 @@ script by hand, with `--mode synthetic`.
 | Folder | What it holds |
 |---|---|
 | `src/` | the library: data, features, models, evaluation, serving, LLM/RAG |
-| `scripts/` | the numbered pipeline steps 01 to 18 |
+| `scripts/` | the numbered pipeline steps 01 to 19 |
 | `app/` | the Streamlit dashboard |
 | `results/tables/`, `results/figures/` | every result in the report (`*_full` = REES46 run) |
 | `results/full100/` | the 100 % full-data validation |

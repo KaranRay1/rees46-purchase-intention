@@ -127,3 +127,11 @@ def test_business_value_script(trained):  # noqa: F811
     assert bv["best"].sum() == 1 and "gain_vs_blanket" in bv.columns
     assert s.csv("business_value_sensitivity").height == 25
     assert "offer_to_everyone" in s.csv("business_value_tests")["vs"].to_list()
+
+
+def test_segments_script(trained):  # noqa: F811
+    _run("19_segments.py", trained, ["--n-resamples", "20", "--ks", "5", "--min-size", "20"])
+    s = ResultStore(trained)
+    m = s.csv("segment_metrics")
+    assert {"category", "price", "cart"} <= set(m["dimension"].to_list())
+    assert s.csv("segment_disparity").height > 0
