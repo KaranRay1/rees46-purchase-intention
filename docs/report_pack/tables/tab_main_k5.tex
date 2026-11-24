@@ -1,0 +1,19 @@
+\begin{table}[t]
+\centering
+\caption{Test results at $K=5$ (mean $\pm$ sd over seeds 42, 7, 2026); latency per visit, batch size 1.}
+\label{tab:main}
+\footnotesize
+\begin{tabular}{lrrrrrr}
+\toprule
+Model & PR-AUC & ROC-AUC & F1 & p95 ms & Size MB & Train s \\
+\midrule
+Rule baseline & 0.2144 $\pm$ 0.0000 & 0.6789 & 0.3953 & 0.001 & <0.01 & <1 \\
+Logistic reg. & 0.3250 $\pm$ 0.0000 & 0.7590 & 0.4009 & 0.032 & <0.01 & 1 \\
+Random forest & 0.3369 $\pm$ 0.0002 & 0.7623 & 0.4000 & 5.412 & 105.13 & 34 \\
+LightGBM & 0.3331 $\pm$ 0.0002 & 0.7615 & 0.3990 & 0.158 & 0.93 & 6 \\
+MLP & 0.3327 $\pm$ 0.0001 & 0.7608 & 0.3991 & 0.080 & 0.09 & 55 \\
+TabNet & 0.3265 $\pm$ 0.0023 & 0.7577 & 0.3952 & 0.944 & 0.83 & 327 \\
+GRU & 0.3358 $\pm$ 0.0006 & 0.7557 & 0.4012 & 0.087 & 0.07 & 249 \\
+\bottomrule
+\end{tabular}
+\end{table}

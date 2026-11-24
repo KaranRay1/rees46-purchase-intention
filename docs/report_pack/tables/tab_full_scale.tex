@@ -1,0 +1,16 @@
+\begin{table}[t]
+\centering
+\caption{Generalisation to all sessions: 10\% sample vs 100\% at $K=5$.}
+\label{tab:scale}
+\footnotesize
+\begin{tabular}{lrrrrr}
+\toprule
+Model & pr\_auc\_10pct & pr\_auc\_100pct & change & train\_sec\_10pct & train\_sec\_100pct \\
+\midrule
+GRU & 0.3358 & 0.3371 & 0.0014 & 249 & 1863 \\
+Random forest & 0.3369 & 0.3358 & -0.0010 & 34 & 394 \\
+LightGBM & 0.3331 & 0.3321 & -0.0010 & 6 & 73 \\
+Logistic reg. & 0.3250 & 0.3258 & 0.0008 & 1 & 11 \\
+\bottomrule
+\end{tabular}
+\end{table}

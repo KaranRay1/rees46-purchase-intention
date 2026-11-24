@@ -1,0 +1,185 @@
+% References for the final report (IEEE style via IEEEtran.bst).
+%
+% Group A: cited in Karan's proposal (copied from Karan_ML_Proposal_.pdf).
+% Group B: CANDIDATES. Details are given from memory to help you find the papers; open each one,
+%          read it, and correct the entry before citing (volume, pages, DOI). Delete what you don't use.
+% Websites (Kaggle dataset page, data.rees46.com, Ollama) belong in footnotes, not here (brief, section 4).
+
+% ---------------------------------------------------------------- Group A (proposal)
+@article{sakar2019,
+  author  = {C. Okan Sakar and S. Olcay Polat and Mete Katircioglu and Yomi Kastro},
+  title   = {Real-time prediction of online shoppers' purchasing intention using multilayer perceptron and {LSTM} recurrent neural networks},
+  journal = {Neural Computing and Applications},
+  volume  = {31},
+  pages   = {6893--6908},
+  year    = {2019},
+  doi     = {10.1007/s00521-018-3523-0}
+}
+@article{satu2023,
+  author  = {M. R. Satu and M. S. Islam},
+  title   = {Modeling online customer purchase intention behavior applying different feature engineering and classification techniques},
+  journal = {Discover Artificial Intelligence},
+  volume  = {3},
+  number  = {36},
+  year    = {2023},
+  doi     = {10.1007/s44163-023-00086-0}
+}
+@article{esmeli2025,
+  author  = {M. Esmeli and H. Gokce},
+  title   = {An Analysis of Consumer Purchase Behavior Following Cart Addition in E-Commerce Utilizing Explainable Artificial Intelligence},
+  journal = {Journal of Theoretical and Applied Electronic Commerce Research},
+  volume  = {20},
+  number  = {1},
+  pages   = {28},
+  year    = {2025},
+  doi     = {10.3390/jtaer20010028}
+}
+@inproceedings{hidasi2016,
+  author    = {B. Hidasi and A. Karatzoglou and L. Baltrunas and D. Tikk},
+  title     = {Session-based Recommendations with Recurrent Neural Networks},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2016}
+}
+@misc{han2024,
+  author = {X. Han and others},
+  title  = {{END4Rec}: Efficient Noise-Decoupling for Multi-Behavior Sequential Recommendation},
+  note   = {arXiv:2403.17603},
+  year   = {2024}
+}
+@article{setiawan2026,
+  author  = {S. Setiawan and others},
+  title   = {An End-to-End Machine Learning Pipeline for Online Purchase Intention Prediction Using Random Forest and {MLOps} Practices},
+  journal = {Angkasa},
+  volume  = {18},
+  number  = {1},
+  year    = {2026},
+  doi     = {10.28989/angkasa.v18i1.3841}
+}
+
+% ---------------------------------------------------------------- Group B (candidates: VERIFY)
+% Methods used in the study
+@article{breiman2001,
+  author = {L. Breiman}, title = {Random Forests}, journal = {Machine Learning},
+  volume = {45}, number = {1}, pages = {5--32}, year = {2001}
+}
+@inproceedings{ke2017,
+  author = {G. Ke and Q. Meng and T. Finley and T. Wang and W. Chen and W. Ma and Q. Ye and T.-Y. Liu},
+  title = {{LightGBM}: A Highly Efficient Gradient Boosting Decision Tree},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)}, year = {2017}
+}
+@inproceedings{arik2021,
+  author = {S. {\"O}. Ar{\i}k and T. Pfister}, title = {{TabNet}: Attentive Interpretable Tabular Learning},
+  booktitle = {AAAI Conference on Artificial Intelligence}, year = {2021}
+}
+@inproceedings{cho2014,
+  author = {K. Cho and B. van Merri{\"e}nboer and C. Gulcehre and D. Bahdanau and F. Bougares and H. Schwenk and Y. Bengio},
+  title = {Learning Phrase Representations using {RNN} Encoder--Decoder for Statistical Machine Translation},
+  booktitle = {Proc. EMNLP}, year = {2014}
+}
+@inproceedings{vaswani2017,
+  author = {A. Vaswani and others}, title = {Attention Is All You Need},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)}, year = {2017}
+}
+@inproceedings{lundberg2017,
+  author = {S. M. Lundberg and S.-I. Lee}, title = {A Unified Approach to Interpreting Model Predictions},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)}, year = {2017}
+}
+@inproceedings{akiba2019,
+  author = {T. Akiba and S. Sano and T. Yanase and T. Ohta and M. Koyama},
+  title = {Optuna: A Next-generation Hyperparameter Optimization Framework},
+  booktitle = {Proc. ACM SIGKDD}, year = {2019}
+}
+% Trees vs deep learning on tabular data (frames RQ1)
+@inproceedings{grinsztajn2022,
+  author = {L. Grinsztajn and E. Oyallon and G. Varoquaux},
+  title = {Why do tree-based models still outperform deep learning on typical tabular data?},
+  booktitle = {NeurIPS Datasets and Benchmarks Track}, year = {2022}
+}
+@article{shwartz2022,
+  author = {R. Shwartz-Ziv and A. Armon}, title = {Tabular data: Deep learning is not all you need},
+  journal = {Information Fusion}, volume = {81}, pages = {84--90}, year = {2022}
+}
+% Purchase intent from clickstreams
+@article{requena2020,
+  author = {B. Requena and G. Cassani and J. Tagliabue and C. Greco and L. Lacasa},
+  title = {Shopper intent prediction from clickstream e-commerce data with minimal browsing information},
+  journal = {Scientific Reports}, volume = {10}, pages = {16983}, year = {2020}
+}
+% Evaluation and statistics
+@article{saito2015,
+  author = {T. Saito and M. Rehmsmeier},
+  title = {The Precision-Recall Plot Is More Informative than the {ROC} Plot When Evaluating Binary Classifiers on Imbalanced Datasets},
+  journal = {PLoS ONE}, volume = {10}, number = {3}, pages = {e0118432}, year = {2015}
+}
+@article{dietterich1998,
+  author = {T. G. Dietterich},
+  title = {Approximate Statistical Tests for Comparing Supervised Classification Learning Algorithms},
+  journal = {Neural Computation}, volume = {10}, number = {7}, pages = {1895--1923}, year = {1998}
+}
+@article{holm1979,
+  author = {S. Holm}, title = {A Simple Sequentially Rejective Multiple Test Procedure},
+  journal = {Scandinavian Journal of Statistics}, volume = {6}, number = {2}, pages = {65--70}, year = {1979}
+}
+@book{efron1993,
+  author = {B. Efron and R. J. Tibshirani}, title = {An Introduction to the Bootstrap},
+  publisher = {Chapman \& Hall}, year = {1993}
+}
+@incollection{platt1999,
+  author = {J. Platt},
+  title = {Probabilistic Outputs for Support Vector Machines and Comparisons to Regularized Likelihood Methods},
+  booktitle = {Advances in Large Margin Classifiers}, publisher = {MIT Press}, year = {1999}
+}
+@inproceedings{guo2017,
+  author = {C. Guo and G. Pleiss and Y. Sun and K. Q. Weinberger}, title = {On Calibration of Modern Neural Networks},
+  booktitle = {Proc. ICML}, year = {2017}
+}
+@article{angelopoulos2021,
+  author = {A. N. Angelopoulos and S. Bates},
+  title = {A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification},
+  journal = {arXiv:2107.07511}, year = {2021}
+}
+@article{wolpert1992,
+  author = {D. H. Wolpert}, title = {Stacked Generalization}, journal = {Neural Networks},
+  volume = {5}, number = {2}, pages = {241--259}, year = {1992}
+}
+@article{gama2014,
+  author = {J. Gama and I. {\v{Z}}liobait{\.e} and A. Bifet and M. Pechenizkiy and A. Bouchachia},
+  title = {A Survey on Concept Drift Adaptation}, journal = {ACM Computing Surveys},
+  volume = {46}, number = {4}, year = {2014}
+}
+% Embeddings
+@inproceedings{barkan2016,
+  author = {O. Barkan and N. Koenigstein}, title = {Item2Vec: Neural Item Embedding for Collaborative Filtering},
+  booktitle = {IEEE International Workshop on Machine Learning for Signal Processing (MLSP)}, year = {2016}
+}
+@inproceedings{levy2014,
+  author = {O. Levy and Y. Goldberg}, title = {Neural Word Embedding as Implicit Matrix Factorization},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)}, year = {2014}
+}
+% Fairness / responsible use
+@inproceedings{hardt2016,
+  author = {M. Hardt and E. Price and N. Srebro}, title = {Equality of Opportunity in Supervised Learning},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)}, year = {2016}
+}
+@inproceedings{mitchell2019,
+  author = {M. Mitchell and others}, title = {Model Cards for Model Reporting},
+  booktitle = {Proc. ACM Conference on Fairness, Accountability, and Transparency (FAT*)}, year = {2019}
+}
+% LLM / retrieval (only if the agent is discussed)
+@inproceedings{lewis2020,
+  author = {P. Lewis and others}, title = {Retrieval-Augmented Generation for Knowledge-Intensive {NLP} Tasks},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)}, year = {2020}
+}
+@inproceedings{yao2023,
+  author = {S. Yao and others}, title = {{ReAct}: Synergizing Reasoning and Acting in Language Models},
+  booktitle = {International Conference on Learning Representations (ICLR)}, year = {2023}
+}
+@article{robertson2009,
+  author = {S. Robertson and H. Zaragoza}, title = {The Probabilistic Relevance Framework: {BM25} and Beyond},
+  journal = {Foundations and Trends in Information Retrieval}, volume = {3}, number = {4}, year = {2009}
+}
+@inproceedings{cormack2009,
+  author = {G. V. Cormack and C. L. A. Clarke and S. Buettcher},
+  title = {Reciprocal Rank Fusion Outperforms Condorcet and Individual Rank Learning Methods},
+  booktitle = {Proc. ACM SIGIR}, year = {2009}
+}

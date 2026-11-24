@@ -1,0 +1,9 @@
+id,hypothesis,verdict
+H1a,Tree ensembles beat logistic regression,partly supported
+H1b,Deep tabular models beat logistic regression,partly supported
+H1c,GRU matches the best aggregated model at K=10,supported
+H2,"Performance rises with K, with diminishing returns",not supported
+H3,Behavioural ratios (G3) add PR-AUC on top of G1+G2,not supported
+H3-variant,Ratios can replace the cart block (G1+G3 vs G1+G2),exploratory
+H4,Tree models dominate the accuracy–latency Pareto front,not supported
+H5,Cart signals (G2) rank first in SHAP importance,partly supported

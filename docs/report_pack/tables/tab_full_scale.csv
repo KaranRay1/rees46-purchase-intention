@@ -1,0 +1,5 @@
+Model,pr_auc_10pct,pr_auc_100pct,change,train_sec_10pct,train_sec_100pct
+GRU,0.3358,0.3371,0.0014,249,1863
+Random forest,0.3369,0.3358,-0.001,34,394
+LightGBM,0.3331,0.3321,-0.001,6,73
+Logistic reg.,0.325,0.3258,0.0008,1,11

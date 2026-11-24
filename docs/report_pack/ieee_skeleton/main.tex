@@ -1,0 +1,95 @@
+% IEEE conference skeleton for the final report. Headings, figure/table slots and budgets only:
+% every sentence of the report must be written by the authors (NCI AI-use rules).
+% Compile on Overleaf ("IEEE Conference Template" provides IEEEtran.cls) or locally with TeX Live.
+% Copy ../figures, ../tables and ../references.bib next to this file (or keep the paths below).
+\documentclass[conference]{IEEEtran}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{url}
+\usepackage{cite}
+\graphicspath{{../figures/}}
+
+\begin{document}
+
+\title{Real-Time Session-Based E-Commerce Purchase Intention Prediction:\\
+A Comparative Analysis of Tabular Machine Learning and Deep Neural Architectures}
+
+\author{
+\IEEEauthorblockN{Karan Ray}
+\IEEEauthorblockA{Student no. [ADD]\\ MSc in Artificial Intelligence\\ National College of Ireland}
+\and
+\IEEEauthorblockN{Merve Kara}
+\IEEEauthorblockA{Student no. [ADD]\\ MSc in Artificial Intelligence\\ National College of Ireland}
+}
+
+\maketitle
+
+\begin{abstract}
+% 100--150 words: problem, research question, data, methods, principal findings, main limitation.
+\end{abstract}
+
+\section{Introduction}
+% ~0.4 page. Context, research question, hypotheses, contribution; state changes since the proposal.
+
+\section{Related Work}
+% ~0.8 page. Critical comparison of [sakar2019], [requena2020], [esmeli2025], [hidasi2016], ... ; the gap.
+
+\section{Methods and Baselines}
+% ~0.6 page. Rule baseline; LR, RF, LightGBM; MLP, TabNet, GRU; additional method(s).
+
+\section{Methodology and Experimental Setup}
+% ~1.0 page. Data, cleaning, eligibility per K, leakage rules, chronological split, features,
+% preprocessing, hyperparameters, tuning on validation only, seeds, statistics.
+% \input{../tables/tab_data_splits}   % optional
+
+\section{Results and Evaluation}
+% ~2.8 pages.
+\subsection{Model comparison}
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{fig1_rq1_model_comparison.pdf}
+  \caption{[Write your caption.]}
+  \label{fig:rq1}
+\end{figure*}
+\input{../tables/tab_main_k5}
+
+\subsection{Efficiency}
+% \begin{figure}[t]\centering\includegraphics[width=\columnwidth]{fig4_rq4_accuracy_vs_latency.pdf}
+% \caption{[Write your caption.]}\label{fig:rq4}\end{figure}
+
+\subsection{Ablation and sensitivity}
+% \begin{figure}[t]\centering\includegraphics[width=\columnwidth]{fig3_rq3_feature_ladder.pdf}
+% \caption{[Write your caption.]}\label{fig:rq3}\end{figure}
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{fig5_extensions_forest.pdf}
+  \caption{[Write your caption.]}
+  \label{fig:ext}
+\end{figure}
+
+\subsection{Robustness and generalisation}
+% \input{../tables/tab_full_scale}
+% \begin{figure}[t]\centering\includegraphics[width=\columnwidth]{fig6_segments_lift.pdf}
+% \caption{[Write your caption.]}\label{fig:seg}\end{figure}
+
+\subsection{Error analysis}
+% Structured manual analysis from ../error_analysis_sheet.csv (your own categories and counts).
+
+\section{Limitations, Ethics, and Responsible Use}
+% ~0.5 page.
+
+\section{Conclusion and Future Work}
+% ~0.3 page.
+
+\section*{Reproducibility Statement}
+% Code (zip / repository), data access (download script; dataset page as a footnote), environment,
+% configuration file, seeds 42/7/2026, procedure (HOW_TO_RUN.md).
+
+\section*{Distribution of Work}
+% Who did what (agreed by both authors).
+
+\bibliographystyle{IEEEtran}
+\bibliography{../references}
+
+\end{document}

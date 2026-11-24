@@ -1,0 +1,19 @@
+\begin{table}[t]
+\centering
+\caption{Effect of each extension on test PR-AUC at $K=5$ (paired bootstrap, 95\% CI).}
+\label{tab:ext}
+\footnotesize
+\begin{tabular}{lrrrr}
+\toprule
+Experiment & Gain & CI low & CI high & Sig. (Holm) \\
+\midrule
++ user history (G6), LightGBM & +0.0555 & +0.0520 & +0.0591 & yes \\
++ item2vec \& text embeddings & +0.0019 & +0.0007 & +0.0031 & yes \\
+Optuna tuning, LightGBM & +0.0005 & -0.0001 & +0.0011 & no \\
+Optuna tuning, MLP & +0.0011 & +0.0004 & +0.0017 & yes \\
+Optuna tuning, GRU & +0.0036 & +0.0024 & +0.0047 & yes \\
+Stacking all models vs best single & +0.0012 & +0.0002 & +0.0023 & no \\
+Transformer vs GRU & +0.0012 & -0.0001 & +0.0027 & no \\
+\bottomrule
+\end{tabular}
+\end{table}
