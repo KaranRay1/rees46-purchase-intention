@@ -331,7 +331,7 @@ visitors is worse than random: they buy anyway. The planner therefore uses the e
 
 ## Advanced ML (steps 12-16)
 
-Seven extensions beyond the main study. Each one is judged on the same test weeks as RQ1, with
+Eight extensions beyond the main study. Each one is judged on the same test weeks as RQ1, with
 paired bootstrap tests and Holm correction, and shown on the dashboard page **Advanced ML**.
 
 | Step | Question | Method | Main outputs |
@@ -343,6 +343,7 @@ paired bootstrap tests and Holm correction, and shown on the dashboard page **Ad
 | 15 | How much is tuning worth? | Optuna TPE on the validation weeks, confirmed with 3 seeds on test | `tuning`, `tuning_trials`, `tuning_importance` |
 | 16 | Does attention beat recurrence? | Transformer encoder vs GRU on the same click sequences | `transformer`, `transformer_tests`, `transformer_attention` |
 | 17 | Does knowing the user's past help? | G6 user history (earlier sessions in a 30-day window, from the full event log) added to LightGBM | `user_history_ablation`, `user_history_tests`, `user_history_segments` |
+| 18 | Which model earns the most? | Every model drives the same discount campaign; cutoff chosen on half the test visits, profit measured on the other half, paired bootstrap + Holm, discount x uplift sensitivity (shown on **Campaign planner**) | `business_value`, `business_value_tests`, `business_value_sensitivity` |
 
 ```bash
 .venv/bin/python scripts/12_conformal_stacking.py --mode full --set data.session_sample_fraction=0.1
@@ -361,6 +362,9 @@ paired bootstrap tests and Holm correction, and shown on the dashboard page **Ad
 ```
 ```bash
 .venv/bin/python scripts/17_user_history.py --mode full --set data.session_sample_fraction=0.1
+```
+```bash
+.venv/bin/python scripts/18_business_value.py --mode full --set data.session_sample_fraction=0.1
 ```
 
 Step 14 adds the text embeddings only when `ollama pull nomic-embed-text` has been run. Step 17 reads user history from the full

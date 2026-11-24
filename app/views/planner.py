@@ -155,3 +155,74 @@ with st.expander("How this is calculated, and what it assumes", icon=":material/
         "- **Before launch:** run an A/B test with a hold-out group to measure the real extra conversion.\n"
         f"- Monthly projection: × {30 / days:.2f} (test days to a month) × {1 / sample:.0f} (sample to whole shop)."
     )
+
+# --------------------------------------------------------------------------- step 18: models in money
+st.subheader("Which model earns the most?", anchor=False)
+bv, bt, bs = s.csv("business_value"), s.csv("business_value_tests"), s.csv("business_value_sensitivity")
+info = s.json("business_value_summary") or {}
+if bv is None or not ui.per_k(bv).height:
+    ui.missing("the model-by-model profit comparison", "18_business_value.py")
+else:
+    o = info.get("offer", {})
+    st.markdown(
+        f"Every model runs the same campaign with fixed settings ({o.get('discount', 0):.0%} discount, "
+        f"{o.get('uplift', 0):.1%} extra buyers, {ui.fmt_money(o.get('aov', 0))} order value). Each model's "
+        "cutoff is chosen on one half of the test visits and its profit **measured on the other half**, "
+        "so no model is rewarded for a threshold tuned on the visits it is judged on. Per month, whole shop.")
+    b = ui.per_k(bv).sort("net")
+    tb = ui.per_k(bt) if bt is not None else None
+    eng = info.get("engine", "gru")
+    top = b.filter(pl.col("best")).row(0, named=True)
+    c = st.columns(3)
+    c[0].metric("Most profitable", ui.label(top["model"]), ui.fmt_money(top["net"]) + " per month",
+                delta_color="off", delta_arrow="off")
+    e = b.filter(pl.col("model") == eng)
+    if e.height:
+        er = e.row(0, named=True)
+        c[1].metric(f"{ui.label(eng)} (engine) vs offer to everyone", "+" + ui.fmt_money(er["gain_vs_blanket"]),
+                    f"{er['gain_vs_blanket'] / max(er['blanket'], 1):+.0%} per month", delta_color="off",
+                    delta_arrow="off")
+    gap = float(top["net"] - b.filter(pl.col("model") != "rule_based")["net"].min())
+    c[2].metric("Spread between the ML/DL models", ui.fmt_money(gap),
+                f"{gap / max(top['net'], 1):.1%} of the best", delta_color="off", delta_arrow="off")
+
+    fig = go.Figure(go.Scatter(
+        x=b["net"], y=[ui.label(m) for m in b["model"]], mode="markers",
+        error_x=dict(type="data", symmetric=False, array=(b["net_high"] - b["net"]).to_list(),
+                     arrayminus=(b["net"] - b["net_low"]).to_list(), color=ink["muted"], thickness=1.5, width=6),
+        marker=dict(size=11, color=[pal[0] if m == eng else ink["muted"] for m in b["model"]],
+                    line=dict(color=ink["surface"], width=2)),
+        hovertemplate="%{y}: %{x:$,.0f}/month<extra></extra>"))
+    ui.style(fig, height=80 + 34 * b.height, legend=False, left=170)
+    fig.update_xaxes(title="Net value per month, whole shop", tickprefix="$", tickformat="~s")
+    fig.update_yaxes(showgrid=False)
+    ui.show(fig, key="bv_models")
+    sig = tb.filter((pl.col("vs") != "offer_to_everyone") & pl.col("significant")) if tb is not None else None
+    tied = tb.filter((pl.col("vs") != "offer_to_everyone") & ~pl.col("significant"))["model"].to_list() if tb is not None else []
+    st.caption(f"Dot = profit, line = 95% bootstrap CI; blue = the engine. Tied with {ui.label(top['model'])} after the "
+               f"Holm correction: {', '.join(ui.label(m) for m in tied) or 'none'}. "
+               f"Significantly less profitable: {', '.join(ui.label(m) for m in sig['model']) if sig is not None and sig.height else 'none'}.")
+    if info.get("spearman_pr_auc_vs_profit", {}).get(str(K)) is not None:
+        st.caption(f"Rank agreement between PR-AUC and profit (Spearman) at {K} clicks: "
+                   f"{info['spearman_pr_auc_vs_profit'][str(K)]:.2f}.")
+
+    if bs is not None and bs.height:
+        with st.expander("When does the engine pay off? Discount × extra buyers", icon=":material/grid_on:"):
+            piv = bs.sort("discount", "uplift")
+            disc = sorted(piv["discount"].unique().to_list())
+            upl = sorted(piv["uplift"].unique().to_list())
+            z = [[float(piv.filter((pl.col("discount") == d) & (pl.col("uplift") == u))["gain_vs_blanket"][0])
+                  for u in upl] for d in disc]
+            hm = go.Figure(go.Heatmap(
+                z=z, x=[f"{u:.1%}" for u in upl], y=[f"{d:.0%}" for d in disc],
+                colorscale=[[i / (len(ui.SEQUENTIAL_BLUE) - 1), col] for i, col in enumerate(ui.SEQUENTIAL_BLUE)],
+                text=[[ui.fmt_money(v) for v in row] for row in z], texttemplate="%{text}",
+                hovertemplate="discount %{y}, extra buyers %{x}<br>gain %{text}/month<extra></extra>",
+                colorbar=dict(title="", tickprefix="$", tickformat="~s"), xgap=2, ygap=2))
+            ui.style(hm, height=320, legend=False, left=70)
+            hm.update_xaxes(title="Extra buyers the offer creates", showgrid=False)
+            hm.update_yaxes(title="Discount", showgrid=False)
+            ui.show(hm, key="bv_sens")
+            st.caption(f"Extra profit per month of using the {ui.label(piv['model'][0])} engine (skip likely buyers) "
+                       f"instead of offering to everyone, after {piv['k'][0]} clicks. The bigger the discount, the more "
+                       "it costs to give it to people who would buy anyway, so the more the engine saves.")

@@ -1,0 +1,35 @@
+{
+  "mode": "full",
+  "offer": {
+    "aov": 364.5162371399957,
+    "discount": 0.1,
+    "uplift": 0.02,
+    "contact_cost": 0.0
+  },
+  "engine": "gru",
+  "units": "net value per month for the whole shop",
+  "scales": {
+    "3": {
+      "scale": 11.369547365220873,
+      "test_days": 26.67678240740741,
+      "sample": 0.09891100919747949
+    },
+    "5": {
+      "scale": 11.369877874314897,
+      "test_days": 26.676006944444445,
+      "sample": 0.09891100919747949
+    },
+    "10": {
+      "scale": 11.371733028181836,
+      "test_days": 26.67165509259259,
+      "sample": 0.09891100919747949
+    }
+  },
+  "spearman_pr_auc_vs_profit": {
+    "3": 0.9285714285714288,
+    "5": 0.6071428571428572,
+    "10": 0.4642857142857144
+  },
+  "n_resamples": 1000,
+  "method": "cutoff chosen on a random half of the test visits, profit measured on the other half"
+}

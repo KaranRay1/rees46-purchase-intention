@@ -10,7 +10,7 @@ on Kaggle under its own licence. You don't need it to run anything in sections 1
 | You want to… | Needs the dataset? | Time |
 |---|---|---|
 | 1. Open the dashboard with all our results and live predictions | No | 5 min |
-| 2. Run the test suite (299 tests) | No | 2 min |
+| 2. Run the test suite (300+ tests) | No | 2 min |
 | 3. Run the whole pipeline end to end on generated data | No | 1 min |
 | 4. Open the notebooks | No | – |
 | 5. Reproduce the real results | Yes | ~5 h |
@@ -100,7 +100,7 @@ script by hand, with `--mode synthetic`.
 .venv/bin/python scripts/01_prepare_data.py --mode full --set data.session_sample_fraction=0.1
 ```
 
-   followed by scripts 02 to 17 with the same `--set`. A machine with 24 GB of RAM is
+   followed by scripts 02 to 18 with the same `--set`. A machine with 24 GB of RAM is
    enough. `scripts/run_full_scale.sh` repeats the main study on 100 % of sessions
    (~32 GB peak memory).
 
@@ -111,7 +111,7 @@ script by hand, with `--mode synthetic`.
 | Folder | What it holds |
 |---|---|
 | `src/` | the library: data, features, models, evaluation, serving, LLM/RAG |
-| `scripts/` | the numbered pipeline steps 01 to 17 |
+| `scripts/` | the numbered pipeline steps 01 to 18 |
 | `app/` | the Streamlit dashboard |
 | `results/tables/`, `results/figures/` | every result in the report (`*_full` = REES46 run) |
 | `results/full100/` | the 100 % full-data validation |

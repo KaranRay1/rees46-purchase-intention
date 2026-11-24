@@ -118,3 +118,12 @@ def test_user_history_script(trained):  # noqa: F811
     assert set(s.csv("user_history_ablation")["feature_set"].to_list()) == {"base", "history"}
     assert set(s.csv("user_history_segments")["segment"].to_list()) <= {"new", "returning"}
     assert s.json("user_history_summary")["window_days"] == 30
+
+
+def test_business_value_script(trained):  # noqa: F811
+    _run("18_business_value.py", trained, ["--n-resamples", "50", "--ks", "5"])
+    s = ResultStore(trained)
+    bv = s.csv("business_value")
+    assert bv["best"].sum() == 1 and "gain_vs_blanket" in bv.columns
+    assert s.csv("business_value_sensitivity").height == 25
+    assert "offer_to_everyone" in s.csv("business_value_tests")["vs"].to_list()
