@@ -126,12 +126,12 @@ def fig_rq1(s: ResultStore, f: Facts) -> pl.DataFrame:
         ax.invert_yaxis()
         ax.set_xlim(float(d["pr_auc_ci_low"].min()) - 0.003, float(d["pr_auc_ci_high"].max()) + 0.003)
         rb = rq1.filter((pl.col("k") == k) & (pl.col("model") == "rule_based"))
-        rule = f"; rule baseline {rb['pr_auc_mean'][0]:.3f}" if rb.height else ""
-        ax.set_title(f"K = {k} (buyer rate {d['base_rate'][0]:.1%}{rule})", fontsize=7)
+        rule = f", rule baseline {rb['pr_auc_mean'][0]:.3f}" if rb.height else ""
+        ax.set_title(f"K = {k} clicks\nbuyer rate {d['base_rate'][0]:.1%}{rule}", fontsize=7)
         ax.set_xlabel("Test PR-AUC")
     h = [plt.Line2D([], [], marker="o", ls="", color=C[x], label=lab) for x, lab in
          (("ML", "Machine learning (Merve Kara)"), ("DL", "Deep learning (Karan Ray)"))]
-    fig.legend(handles=h, loc="upper center", ncol=2, bbox_to_anchor=(0.5, 1.09), frameon=False)
+    fig.legend(handles=h, loc="upper center", ncol=2, bbox_to_anchor=(0.5, 1.14), frameon=False)
     save(fig, "fig1_rq1_model_comparison")
 
     eff = s.csv("rq4_efficiency")
